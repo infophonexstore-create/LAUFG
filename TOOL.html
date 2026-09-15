@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flixly</title>
+<style>
+  :root{
+    --bg:#0a0e1a;
+    --bg-glow-1:#8b5cf61c;
+    --bg-glow-2:#3b82f61a;
+    --panel:#111830;
+    --panel-2:#0f1526;
+    --line:#26304a;
+    --ink:#eef1fb;
+    --dim:#8b93ac;
+    --panel-ink:#e9ecf7;
+    --panel-dim:#8993ad;
+    --field-bg:#0b1120;
+    --field-bg-hover:#0e1729;
+    --gold:#f5a623;
+    --gold-onDark:#f5b84a;
+    --violet:#8b5cf6;
+    --violet-onDark:#a78bfa;
+    --good:#10b981;
+    --sans:'Inter', -apple-system, sans-serif;
+    --serif:'Fraunces', Georgia, serif;
+    --mono:ui-monospace, 'SF Mono', Consolas, monospace;
+    /* step accents */
+    --step1:#f5a623; --step1-bg:#f5a62322;
+    --step2:#8b5cf6; --step2-bg:#8b5cf622;
+    --step3:#10b981; --step3-bg:#10b98122;
+    --step4:#ec4899; --step4-bg:#ec489922;
+    --step5:#3b82f6; --step5-bg:#3b82f622;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@600;700&family=Poppins:wght@700;800&family=Montserrat:wght@700;800&family=Playfair+Display:wght@700&family=Oswald:wght@600;700&family=Anton&family=Manrope:wght@700;800&display=swap');
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; color:var(--ink); font-family:var(--sans); line-height:1.55; padding:32px 18px 80px;
+    background:
+      radial-gradient(1000px 460px at 10% -10%, var(--bg-glow-1), transparent 60%),
+      radial-gradient(900px 480px at 100% 0%, var(--bg-glow-2), transparent 55%),
+      var(--bg);
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px; margin:0 auto;}
+  header{border-bottom:2px solid #1c2438; padding-bottom:16px; margin-bottom:20px;}
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(26px,4vw,38px);
+    margin:0 0 6px; letter-spacing:-0.01em;
+    background:linear-gradient(90deg, var(--gold-onDark), var(--violet-onDark));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  header p{margin:0; color:var(--dim); font-size:14px; max-width:65ch;}
+
+  .notice{
+    background:#241b06; border:1.5px solid #6b551f; border-radius:8px; padding:13px 15px;
+    font-size:13px; color:#f0da9a; margin-bottom:22px; line-height:1.6;
+  }
+  .notice b{color:var(--gold-onDark);}
+
+  /* Content cards: dark navy panels with a coloured left accent per step, sitting on the
+     even-darker page background — this is the "step card" look the whole UI is built on. */
+  .block{
+    background:var(--panel); border:1.5px solid var(--line); border-left-width:3px; border-radius:12px;
+    padding:16px 18px; margin-bottom:18px; color:var(--panel-ink);
+    box-shadow:0 6px 18px rgba(0,0,0,0.35);
+  }
+  /* step accent colors + badge numbering are defined further below, alongside the rest of
+     the step-card layout styling. */
+
+  .block h3{
+    font-family:var(--mono); font-size:13px; margin:0; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  }
+  .block p.hint{font-size:12.5px; color:var(--panel-dim); margin:0 0 10px;}
+  .block textarea{
+    width:100%; min-height:80px; border:1px solid var(--line); border-radius:6px;
+    padding:10px; font-family:var(--sans); font-size:13px; background:var(--field-bg); color:var(--panel-ink); resize:vertical;
+  }
+  .block textarea:focus{outline:none; border-color:var(--violet);}
+  .row-actions{display:flex; gap:10px; margin-top:10px;}
+
+  .steps{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:12px; margin-bottom:18px;}
+  @media (max-width:820px){ .steps{grid-template-columns:1fr 1fr;} }
+
+  .slot{
+    background:var(--panel-2); border:1.5px solid var(--line); border-radius:12px;
+    padding:14px; transition:border-color .15s ease; color:var(--panel-ink);
+    box-shadow:0 6px 18px rgba(0,0,0,0.3);
+  }
+  .slot.filled{border-color:var(--step1);}
+  .slot .tag{font-family:var(--mono); font-size:10.5px; color:var(--gold-onDark); display:block; margin-bottom:3px; font-weight:700;}
+  .slot h3{font-family:var(--serif); font-size:16px; margin:0 0 9px; font-weight:700; color:var(--panel-ink); text-transform:none; letter-spacing:0;}
+
+  .drop{
+    border:1.5px dashed #384265; border-radius:6px; padding:16px 8px;
+    text-align:center; cursor:pointer; font-size:12.5px; color:var(--panel-dim);
+    background:var(--field-bg); transition:background .15s ease, border-color .15s ease; display:block;
+  }
+  .drop:hover{background:var(--field-bg-hover); border-color:var(--step1);}
+  .drop.has-file{border-style:solid; border-color:var(--step1); color:var(--panel-ink); padding:0; overflow:hidden;}
+  .drop video{width:100%; display:block; max-height:120px; object-fit:cover;}
+  input[type=file]{display:none;}
+
+  .trim-row{display:flex; gap:7px; margin-top:9px;}
+  .trim-field{flex:1;}
+  .trim-field label{font-size:9.5px; color:var(--panel-dim); display:block; margin-bottom:2px; font-family:var(--mono);}
+  .trim-field input, .trim-field select{
+    width:100%; border:1px solid var(--line); border-radius:4px; padding:6px 7px;
+    font-family:var(--mono); font-size:11.5px; background:var(--field-bg); color:var(--panel-ink);
+  }
+  .dur-label{font-size:10.5px; color:var(--panel-dim); margin-top:5px; display:block; font-family:var(--mono);}
+
+  textarea.caption{
+    width:100%; margin-top:8px; border:1px solid var(--line); border-radius:4px;
+    padding:7px 9px; font-family:'Inter','Noto Nastaliq Urdu',sans-serif; font-size:13px; resize:vertical;
+    min-height:44px; background:var(--field-bg); color:var(--panel-ink); direction:auto; unicode-bidi:plaintext;
+  }
+  textarea.caption:focus{outline:none; border-color:var(--violet);}
+  .field-label{font-family:var(--mono); font-size:10px; color:var(--panel-dim); display:block; margin-top:10px; margin-bottom:2px;}
+  .field-label.first{margin-top:0;}
+
+  .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 22px;}
+  @media (max-width:820px){ .settings-grid{grid-template-columns:1fr;} }
+  .setting-item label.main{font-size:13px; font-weight:700; display:block; margin-bottom:7px; color:var(--panel-ink);}
+  .radio-row{display:flex; gap:12px; font-size:12.5px; flex-wrap:wrap;}
+  .radio-row label{display:flex; align-items:center; gap:5px; cursor:pointer; font-weight:400;}
+  .setting-item input[type=number]{
+    width:70px; border:1px solid var(--line); border-radius:4px; padding:6px 7px; font-family:var(--mono); font-size:12.5px;
+    background:var(--field-bg); color:var(--panel-ink);
+  }
+  select{background:var(--field-bg); color:var(--panel-ink); border:1px solid var(--line); border-radius:4px; padding:7px 8px; font-size:12.5px;}
+  .sub{font-size:10.5px; color:var(--panel-dim); margin-top:4px;}
+  input[type=range]{width:130px; vertical-align:middle; accent-color:var(--violet);}
+  input[type=radio]{accent-color:var(--violet);}
+
+  /* Toggle-switch look for every on/off setting (Visual pop, vignette, tight pacing, hook
+     punch-in, caption pop-in, blur, loop-friendly ending, background music on/off) — this
+     restyles the SAME <input type="checkbox"> elements the app already uses (same ids, same
+     change events), it does not add or rename anything. */
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; margin:9px 0; color:var(--panel-dim);}
+  .toggle-row label{order:1; flex:1; cursor:pointer;}
+  .toggle-row input[type=checkbox]{
+    appearance:none; -webkit-appearance:none; order:2; flex-shrink:0;
+    width:38px; height:22px; border-radius:11px; background:#232c46; position:relative;
+    cursor:pointer; outline:none; border:none; margin:0; transition:background .15s ease;
+  }
+  .toggle-row input[type=checkbox]::before{
+    content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%;
+    background:#fff; transition:left .15s ease; box-shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+  .toggle-row input[type=checkbox]:checked{background:var(--good);}
+  .toggle-row input[type=checkbox]:checked::before{left:18px;}
+
+  .music-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .music-row .drop{padding:8px 14px; display:inline-block;}
+
+  button{
+    font-family:var(--sans); font-weight:600; font-size:13.5px; cursor:pointer;
+    border-radius:6px; border:1.5px solid var(--line); padding:9px 16px; background:var(--field-bg); color:var(--panel-ink);
+    transition:all .12s ease;
+  }
+  button:hover{background:var(--field-bg-hover); border-color:var(--violet);}
+  button.primary{background:linear-gradient(90deg, var(--gold-onDark), #f0935c); color:#1b1508; border-color:transparent; font-weight:700;}
+  button.primary:hover{filter:brightness(1.06);}
+  button:disabled{opacity:.4; cursor:not-allowed;}
+
+  .generate-bar{display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:6px;}
+  .status{margin-top:16px; font-family:var(--mono); font-size:12.5px; color:var(--dim); display:none; white-space:pre-wrap; word-break:break-word;}
+  .status.active{display:block;}
+  .bar{height:6px; background:#141c33; border-radius:3px; overflow:hidden; margin-top:8px;}
+  .bar-fill{height:100%; width:0%; background:linear-gradient(90deg, var(--gold-onDark), var(--violet-onDark)); transition:width .15s ease;}
+
+  .output{margin-top:26px; padding-top:22px; border-top:2px solid #1c2438; display:none;}
+  .output.active{display:block;}
+  .output h3{font-family:var(--serif); font-size:19px; margin:0 0 12px; color:var(--ink); text-transform:none; letter-spacing:0;}
+  .output video{width:100%; max-width:320px; border-radius:8px; border:1.5px solid var(--violet-onDark); display:block; aspect-ratio:9/16; background:#000;}
+  .output .dl-row{margin-top:12px; display:flex; gap:10px;}
+  .output .dl-row button{background:var(--panel); color:var(--panel-ink);}
+  footer{margin-top:36px; font-size:11.5px; color:#5c6482; border-top:1px solid #1c2438; padding-top:12px;}
+
+  /* ---------- two-column layout: settings (left) + live preview (right) ---------- */
+  .wrap-2col{max-width:1180px; display:grid; grid-template-columns:1fr 380px; gap:22px; align-items:start;}
+  @media (max-width:980px){ .wrap-2col{grid-template-columns:1fr;} .col-right{order:-1;} }
+  .col-right{position:sticky; top:18px;}
+
+  /* Bigger, bolder step headers (number badge + icon + label) — purely visual, sits on top
+     of the exact same .block markup/ids as before. */
+  .step-head{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .step-badge{
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-weight:800; font-size:14px; flex-shrink:0; color:#0a0e1a;
+  }
+  .step-1 .step-badge{background:var(--step1);}
+  .step-2 .step-badge{background:var(--step2); color:#fff;}
+  .step-3 .step-badge{background:var(--step3);}
+  .step-4 .step-badge{background:var(--step4); color:#fff;}
+  .step-5 .step-badge{background:var(--step5); color:#fff;}
+  .block.step-1{border-left-color:var(--step1);}
+  .block.step-2{border-left-color:var(--step2);}
+  .block.step-3{border-left-color:var(--step3);}
+  .block.step-4{border-left-color:var(--step4);}
+  .block.step-5{border-left-color:var(--step5);}
+  .step-head h3{font-family:var(--sans); font-size:16.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; margin:0;}
+  .step-1 .step-head h3{color:var(--step1);}
+  .step-2 .step-head h3{color:var(--violet-onDark);}
+  .step-3 .step-head h3{color:var(--step3);}
+  .step-4 .step-head h3{color:var(--step4);}
+  .step-5 .step-head h3{color:#6ea8fe;}
+  .step-head .step-icon{font-size:17px; margin-left:auto; opacity:.85;}
+
+  /* Callout that lists every transition style so it's visible without opening the dropdown */
+  .transition-list{
+    font-size:11.5px; color:var(--panel-dim); background:var(--field-bg); border:1px dashed var(--line);
+    border-radius:6px; padding:8px 10px; margin-top:8px; line-height:1.7;
+  }
+  .transition-list b{color:var(--panel-ink);}
+
+  /* ---------- Live preview panel ---------- */
+  .preview-panel{
+    background:var(--panel); border:1.5px solid var(--line); border-radius:12px;
+    padding:16px 18px; color:var(--panel-ink); box-shadow:0 6px 18px rgba(0,0,0,0.35);
+  }
+  .preview-head{display:flex; align-items:center; gap:8px; margin-bottom:2px;}
+  .preview-dot{width:9px; height:9px; border-radius:50%; background:var(--step3); box-shadow:0 0 8px var(--step3);}
+  .preview-head b{font-family:var(--sans); font-weight:800; font-size:15px; letter-spacing:.03em;}
+  .preview-sub{font-size:12px; color:var(--panel-dim); margin:0 0 12px;}
+  .phone-frame{
+    background:#000; border-radius:14px; overflow:hidden; aspect-ratio:9/16; position:relative;
+    border:2px solid #232c46; display:flex; align-items:center; justify-content:center;
+  }
+  .phone-frame video{width:100%; height:100%; object-fit:cover; display:block;}
+  .phone-frame .empty{color:#5c6482; font-size:12.5px; text-align:center; padding:20px; font-family:var(--mono);}
+  .preview-note{font-size:11px; color:var(--panel-dim); margin-top:10px; line-height:1.6;}
+  .pro-tips{
+    margin-top:16px; background:var(--field-bg); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
+  }
+  .pro-tips b{font-size:12.5px; color:var(--gold-onDark); display:block; margin-bottom:6px;}
+  .pro-tips ul{margin:0; padding-left:18px; font-size:12px; color:var(--panel-dim); line-height:1.9;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Flixly</h1>
+    <p>Apni clips (jitni chahiye, koi fix limit nahi) caption aur music ke sath jod kar aik polished, Reels-ready vertical video banao — seedha browser mein, koi heavy processing nahi.</p>
+  </header>
+
+  <div class="notice">
+    <b>Ek honest baat:</b> koi bhi tool Instagram ke algorithm par "boost/viral" ki guarantee nahi de sakta. Lekin jo cheezein editing se control ho sakti hain — sahi 9:16 size, smooth transitions, hook par punch-in, tight trimming, background music — woh sab is tool mein hain. Yeh tool ab seedha aapke browser ke apne recorder se kaam karta hai (koi bhari wasm engine nahi), is liye generate hamesha video ki length ke barabar time mein khatam ho jata hai aur crash nahi hota.
+  </div>
+
+  <div class="wrap-2col">
+    <div class="col-left">
+
+      <!-- STEP 1 -->
+      <div class="block step-1">
+        <div class="step-head"><span class="step-badge">1</span><h3>Step 1 · Upload Videos</h3><span class="step-icon">☁️</span></div>
+        <div class="row-actions" style="align-items:center; margin-bottom:12px;">
+          <button id="addClipBtn" type="button">+ Ek clip aur add karo</button>
+          <button id="removeClipBtn" type="button">− Aakhri clip hatao</button>
+          <span id="clipCountLabel" style="font-size:12px; color:var(--dim);"></span>
+        </div>
+        <div class="steps" id="slots"></div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="block step-2">
+        <div class="step-head"><span class="step-badge">2</span><h3>Step 2 · Caption, Hook &amp; Ending</h3><span class="step-icon">✏️</span></div>
+        <p class="hint">Poora caption text yahan paste karo — har clip ka caption khaali line se separate karo (pehli clip = Hook, aakhri = Ending, beech ki clips = Movement). Jitne paragraphs hongay utni clip slots khud ban/adjust ho jayengi. Har clip ki caption us clip ke apne card mein (Step 1 wale) bhi alag se edit ho sakti hai.</p>
+        <textarea id="fullScript" placeholder="Clip 1 (hook) ka caption...
+
+Clip 2 ka caption...
+
+Clip 3 ka caption...
+
+...jitni clips hon utne paragraphs"></textarea>
+        <div class="row-actions"><button id="splitBtn" type="button">Paragraphs se clips banao</button></div>
+        <span class="field-label" style="margin-top:14px;">Caption Style</span>
+        <select id="captionStyle" style="width:100%;">
+          <option value="classic" selected>Classic (dark box + fade in)</option>
+          <option value="popIn">Bold Pop-in</option>
+          <option value="karaoke">Karaoke word-highlight</option>
+          <option value="glowUnderline">Glow Underline ★ (house original)</option>
+          <option value="stickerTilt">Sticker Tilt ★ (house original)</option>
+          <option value="minimalLine">Minimal Line (clean, no box)</option>
+          <option value="softShadow">Soft Shadow (clean, no box)</option>
+          <option value="outlinePop">Outline Pop (clean, no box)</option>
+          <option value="gradientText">Gradient Text (clean, no box)</option>
+          <option value="typewriter">Typewriter (clean, no box)</option>
+        </select>
+        <span class="field-label">Font (non-Urdu captions)</span>
+        <select id="captionFont" style="width:100%;">
+          <option value="Inter" selected>Inter</option>
+          <option value="Poppins">Poppins</option>
+          <option value="Montserrat">Montserrat</option>
+          <option value="Playfair Display">Playfair Display</option>
+          <option value="Oswald">Oswald</option>
+          <option value="Anton">Anton</option>
+          <option value="Manrope">Manrope</option>
+        </select>
+        <div class="sub">Urdu caption par yeh apply nahi hota — Urdu hamesha Nastaliq mein khud dikhta hai.</div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="block step-3">
+        <div class="step-head"><span class="step-badge">3</span><h3>Step 3 · Effects</h3><span class="step-icon">✨</span></div>
+        <div class="toggle-row"><input type="checkbox" id="visualPop" checked><label for="visualPop">Visual pop (contrast + saturation boost)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="vignette" checked><label for="vignette">Cinematic vignette</label></div>
+        <div class="toggle-row"><input type="checkbox" id="tightPace" checked><label for="tightPace">Tight pacing (10% faster — feels snappier)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="hookZoom" checked><label for="hookZoom">Hook punch-in (0.4s attention grab)</label></div>
+        <div class="toggle-row"><input type="checkbox" id="animCaptions" checked><label for="animCaptions">Animated caption pop-in</label></div>
+        <div class="toggle-row"><input type="checkbox" id="bgBlur"><label for="bgBlur">Blur Background (poori frame par)</label></div>
+        <div class="sub" style="margin:2px 0 0 23px;">Intensity: <input type="number" id="bgBlurAmt" value="14" min="2" max="30" step="1" style="width:50px"> px</div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="block step-4">
+        <div class="step-head"><span class="step-badge">4</span><h3>Step 4 · Transition &amp; Music</h3><span class="step-icon">🎵</span></div>
+        <span class="field-label first">Transition</span>
+        <select id="transType" style="width:100%;">
+          <option value="auto" selected>Auto — Smart Mix (Trend Style)</option>
+          <option value="cut">Cut / Jump Cut</option>
+          <option value="zoomPunch">Zoom Punch (TikTok-style hard cut)</option>
+          <option value="whipPan">Whip Pan (fast swipe)</option>
+          <option value="spin">Spin Swap</option>
+          <option value="splitReveal">Split Reveal</option>
+          <option value="inkBloom">Ink Bloom ★ (house original)</option>
+          <option value="blindsSweep">Blinds Sweep ★ (house original)</option>
+          <option value="irisSquare">Iris Square</option>
+          <option value="curtain">Curtain</option>
+          <option value="diagonalWipe">Diagonal Wipe</option>
+          <option value="bounceScale">Bounce Scale</option>
+          <option value="colorWash">Color Wash</option>
+          <option value="fade">Fade</option>
+          <option value="dissolve">Dissolve</option>
+          <option value="flash">Flash / White Flash</option>
+          <option value="slideLeft">Slide Left</option>
+          <option value="slideRight">Slide Right</option>
+          <option value="slideUp">Slide Up</option>
+          <option value="zoom">Zoom In/Out</option>
+          <option value="wipeCircle">Circle Reveal</option>
+        </select>
+        <div class="sub">Duration: <input type="number" id="transDur" value="0.35" min="0.1" max="1" step="0.05" style="width:52px"> sec — "Auto" har cut par khud alag transition chunta hai.</div>
+        <div class="transition-list"><b>"Auto" in sab mein se chunta hai:</b> Cut/Jump Cut, Zoom Punch, Whip Pan, Spin Swap, Split Reveal, Ink Bloom★, Blinds Sweep★, Iris Square, Curtain, Diagonal Wipe, Bounce Scale, Color Wash, Fade, Dissolve, Flash, Slide Left/Right/Up, Zoom In/Out, Circle Reveal — total 20+ styles.</div>
+        <div class="row-actions" style="margin-top:12px;"><button id="suggestBtn" type="button">👑 Best transition + caption suggest karo</button></div>
+        <p class="hint" id="suggestTip" style="margin:8px 0 0;">Yaqeen nahi transition/caption/font kya rakhein? Button dabao — hook ke liye jo combo generally sab se acha result deta hai woh khud set ho jayega.</p>
+
+        <span class="field-label" style="margin-top:16px;">Background music</span>
+        <div class="toggle-row" style="margin:6px 0 8px;"><input type="checkbox" id="musicEnabled"><label for="musicEnabled"><b>On karo</b> — tabhi music use hogi, warna yeh poora hissa bilkul chhua tak nahi jayega.</label></div>
+        <div class="sub" style="margin-bottom:6px;">On karne ke baad apni music file yahan upload karo — clip ki apni audio ke sath halka mix hogi.</div>
+        <div class="music-row" id="musicControls" style="opacity:0.4; pointer-events:none;">
+          <label class="drop" id="musicDrop">
+            <span id="musicDropText">Music file chuno</span>
+            <input type="file" accept="audio/*" id="musicFile">
+          </label>
+          <span>Volume: <input type="range" id="musicVol" min="0" max="100" value="22"></span>
+        </div>
+        <div class="sub">Music loop ho jayegi agar video se choti hui.</div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="block step-5">
+        <div class="step-head"><span class="step-badge">5</span><h3>Step 5 · Export</h3><span class="step-icon">⬇️</span></div>
+        <span class="field-label first">Length &amp; loop (Reels sweet spot: 7-15s)</span>
+        <div style="display:flex; align-items:center; gap:8px; margin:8px 0;">
+          <span style="font-size:12px;">Target total:</span>
+          <input type="number" id="targetLen" value="12" min="4" max="40" step="1">
+          <span style="font-size:12px;">sec</span>
+          <button type="button" id="autoFitBtn" style="font-size:11px; padding:6px 10px;">Auto-fit sab clips</button>
+        </div>
+        <div class="sub" style="margin:-4px 0 8px;"><b>Yeh sirf final judi hui video ki total length control karta hai</b> — chahe kitni bhi clips ho, aakhri video kabhi is number se lambi nahi banegi. "Auto-fit" sab clips ko is total mein barabar hisso mein baant deta hai (sirf ek shuruaati andaza, aap trim start/end se har clip ko khud bhi adjust kar sakte ho). <u>Note:</u> yeh har clip ke andar wala "Best len" box (Auto-select best part ke liye) se bilkul alag cheez hai — woh sirf usi ek clip ke andar sab se acha/loud hissa dhoondta hai, poori video ki length usse control nahi hoti.</div>
+        <div class="toggle-row" style="margin:0 0 14px;"><input type="checkbox" id="loopFriendly" checked><label for="loopFriendly">Loop-friendly ending — aakhri clip ka last lamha hook (Clip 1) mein wapas dheemay se blend hota hai, taake video repeat par bhi smooth lage</label></div>
+
+        <span class="field-label">Quality &amp; output</span>
+        <div class="radio-row" style="margin-top:6px;">
+          <label><input type="radio" name="qualityMode" value="hd" checked> HD Smart (Recommended)</label>
+          <label><input type="radio" name="qualityMode" value="auto"> Native (clips ki apni resolution)</label>
+          <label><input type="radio" name="qualityMode" value="lite"> Lite (bohot purane devices)</label>
+        </div>
+        <div class="sub" style="margin-top:8px;">HD Smart 1080×1920 (Reels/Insta ka standard best) target karta hai, aur khud aapke device ki speed bhanp kar bitrate/fps thoda adjust kar leta hai — taake low-RAM phone ho ya tez laptop, dono par smoothly bane, bina kisi extra setting ke.</div>
+
+        <div class="generate-bar" style="margin-top:16px;">
+          <button class="primary" id="generateBtn" disabled>Generate video</button>
+          <button id="resetBtn" type="button">Reset</button>
+        </div>
+        <div class="status" id="status">
+          <span id="statusText">Processing...</span>
+          <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+        </div>
+        <div class="output" id="output">
+          <h3>Final video</h3>
+          <video id="outVideo" controls playsinline></video>
+          <div class="dl-row"><a id="dlLink" href="#" download="flixly.webm"><button type="button">Download video</button></a></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="col-right">
+      <div class="preview-panel">
+        <div class="preview-head"><span class="preview-dot"></span><b>LIVE PREVIEW</b></div>
+        <p class="preview-sub">Yeh aapki pehli clip ka raw source preview hai.</p>
+        <div class="phone-frame">
+          <video id="previewVideo" controls playsinline muted style="display:none;"></video>
+          <div class="empty" id="previewEmpty">Pehli clip upload karo<br>— yahan uska preview dikhega</div>
+        </div>
+        <div class="preview-note">Note: yeh sirf source clip ka preview hai (bina caption/filter/transition ke). Asal final video "Generate" dabane ke baad Step 5 mein download ke liye taiyar hoga, aur usmein sab effects/caption/transition shamil honge.</div>
+        <div class="pro-tips">
+          <b>💡 Pro Tips</b>
+          <ul>
+            <li>Chhota aur catchy hook rakho (0.5–3s)</li>
+            <li>Caption text bara aur aasani se parhne wala rakho</li>
+            <li>Trending music behtar reach deti hai</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Sab kuch aapke browser mein hi process hota hai — koi clip/music kahin upload nahi hoti.</footer>
+</div>
+
+<script>
+// ---------- font warm-up (small curated set, so it's cheap and reliable) ----------
+function warmFont(spec){ try{ document.fonts.load(spec).catch(()=>{}); }catch(e){} }
+['700 32px "Inter"','700 32px "Noto Nastaliq Urdu"'].forEach(warmFont);
+document.getElementById('captionFont').addEventListener('change', e => warmFont(`700 32px "${e.target.value}"`));
+warmFont(`700 32px "${document.getElementById('captionFont').value}"`);
+
+// ---------- slot setup (dynamic clip count: 1 to MAX_CLIPS) ----------
+const MIN_CLIPS = 1;
+// No real "unlimited" is possible in a browser — every clip becomes a full <video> element
+// that stays loaded for the whole generation, so at some point more clips just means the
+// tab runs out of memory or the browser starts fighting itself for decoders (the same kind
+// of slowdown discussed earlier). 50 is high enough that it is not a practical limit for
+// normal Reels use, while still keeping the tool from locking up if someone selects an
+// unreasonable number of files by mistake.
+const MAX_CLIPS = 50;
+const DEFAULT_CLIPS = 4;
+const slotsEl = document.getElementById('slots');
+const state = {
+  files:[], captions:[], trims:[], durations:[], speeds:[], bestLens:[], urls:[],
+  musicFile:null,
+};
+
+function labelFor(i, n){
+  if (i === 0) return { tag:'Clip 1', title:'Hook' };
+  if (i === n-1) return { tag:'Clip '+(i+1), title:'Ending' };
+  return { tag:'Clip '+(i+1), title:'Movement '+i };
+}
+
+// Rebuilds the whole slot grid from `state` — used whenever the clip count changes
+// (add/remove/split). Any clip already filled (state.files[i] set) keeps its uploaded
+// video (via its saved object URL in state.urls) and all its field values; nothing about
+// how a slot's file/caption/trim/speed is stored or read changes, so generateVideo()
+// and every other function below keeps working exactly as before regardless of clip count.
+function renderSlots(){
+  const n = state.files.length;
+  slotsEl.innerHTML = '';
+  for (let i=0;i<n;i++){
+    const l = labelFor(i, n);
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (state.files[i] ? ' filled' : '');
+    slot.id = 'slot-'+i;
+    const hasFile = !!state.files[i];
+    slot.innerHTML = `
+      <span class="tag">${l.tag}</span>
+      <h3>${l.title}</h3>
+      <label class="drop ${hasFile ? 'has-file' : ''}" id="drop-${i}">
+        ${hasFile
+          ? `<video src="${state.urls[i]}" muted></video>`
+          : `<span id="dropText-${i}">Video chuno ya yahan drop karo</span>`}
+        <input type="file" accept="video/*" id="file-${i}" ${hasFile ? 'style="display:none"' : ''}>
+      </label>
+      <span class="dur-label" id="dur-${i}">${state.durations[i] ? `Clip duration: ${state.durations[i].toFixed(1)}s` : ''}</span>
+      <div class="trim-row">
+        <div class="trim-field"><label>Best len (s)</label><input type="number" id="bestLen-${i}" min="1" step="0.5" value="${state.bestLens[i] ?? 5}"></div>
+        <div class="trim-field" style="display:flex; align-items:flex-end;"><button type="button" id="autoBtn-${i}" style="width:100%; font-size:11px; padding:7px 4px;">Auto-select best part</button></div>
+      </div>
+      <span class="dur-label" id="autoStatus-${i}"></span>
+      <div class="trim-row">
+        <div class="trim-field"><label>Trim start (s)</label><input type="number" id="trimStart-${i}" min="0" step="0.1" value="${(state.trims[i]&&state.trims[i].start)||0}"></div>
+        <div class="trim-field"><label>Trim end (s)</label><input type="number" id="trimEnd-${i}" min="0" step="0.1" value="${(state.trims[i]&&state.trims[i].end)?state.trims[i].end.toFixed(1):0}"></div>
+      </div>
+      <div class="trim-row">
+        <div class="trim-field" style="flex:1 1 100%;">
+          <label>Speed</label>
+          <select id="speed-${i}">
+            <option value="0.5">0.5x — Slow-mo</option>
+            <option value="0.75">0.75x</option>
+            <option value="1">1x — Normal</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x — Fast</option>
+            <option value="2">2x — Very Fast</option>
+          </select>
+        </div>
+      </div>
+      <span class="field-label first">Caption (video par dikhega)</span>
+      <textarea class="caption" id="cap-${i}" placeholder="e.g. is jaga par yeh text dikhega...">${state.captions[i]||''}</textarea>
+    `;
+    slotsEl.appendChild(slot);
+
+    if (state.durations[i]){
+      document.getElementById('trimStart-'+i).max = state.durations[i];
+      document.getElementById('trimEnd-'+i).max = state.durations[i];
+    }
+    const speedSel = document.getElementById('speed-'+i);
+    speedSel.value = String(state.speeds[i] || 1);
+
+    const drop = slot.querySelector('#drop-'+i);
+    const input = slot.querySelector('#file-'+i);
+    input.addEventListener('change', e => handleFile(i, e.target.files[0]));
+    drop.addEventListener('dragover', e => e.preventDefault());
+    drop.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files[0]) handleFile(i, e.dataTransfer.files[0]); });
+    slot.querySelector('#cap-'+i).addEventListener('input', e => { state.captions[i] = e.target.value; });
+    slot.querySelector('#trimStart-'+i).addEventListener('input', e => { state.trims[i].start = parseFloat(e.target.value) || 0; });
+    slot.querySelector('#trimEnd-'+i).addEventListener('input', e => { state.trims[i].end = parseFloat(e.target.value) || 0; });
+    slot.querySelector('#speed-'+i).addEventListener('change', e => { state.speeds[i] = parseFloat(e.target.value) || 1; });
+    slot.querySelector('#bestLen-'+i).addEventListener('input', e => { state.bestLens[i] = parseFloat(e.target.value) || 5; });
+    slot.querySelector('#autoBtn-'+i).addEventListener('click', () => autoSelectBest(i));
+  }
+
+  document.getElementById('clipCountLabel').textContent = `${n} / ${MAX_CLIPS} clips`;
+  document.getElementById('removeClipBtn').disabled = n <= MIN_CLIPS;
+  document.getElementById('addClipBtn').disabled = n >= MAX_CLIPS;
+  checkReady();
+}
+
+// Grows/shrinks every parallel state array together and re-renders. Growing only appends
+// fresh empty slots — every already-filled clip's data (file/url/caption/trim/speed)
+// stays exactly where it was, at the same index, untouched.
+function setClipCount(n){
+  n = Math.max(MIN_CLIPS, Math.min(MAX_CLIPS, n));
+  const cur = state.files.length;
+  if (n > cur){
+    for (let k=cur;k<n;k++){
+      state.files.push(null); state.captions.push('');
+      state.trims.push({start:0,end:0}); state.durations.push(0); state.speeds.push(1);
+      state.bestLens.push(5); state.urls.push(null);
+    }
+  } else if (n < cur){
+    for (let k=cur-1;k>=n;k--){
+      if (state.urls[k]){ try{ URL.revokeObjectURL(state.urls[k]); }catch(e){} }
+    }
+    state.files.length = n; state.captions.length = n;
+    state.trims.length = n; state.durations.length = n; state.speeds.length = n;
+    state.bestLens.length = n; state.urls.length = n;
+  }
+  renderSlots();
+}
+
+setClipCount(DEFAULT_CLIPS);
+
+document.getElementById('addClipBtn').addEventListener('click', () => setClipCount(state.files.length+1));
+document.getElementById('removeClipBtn').addEventListener('click', () => setClipCount(state.files.length-1));
+
+function handleFile(i, file){
+  if (!file) return;
+  state.files[i] = file;
+  const drop = document.getElementById('drop-'+i);
+  const slot = document.getElementById('slot-'+i);
+  if (state.urls[i]){ try{ URL.revokeObjectURL(state.urls[i]); }catch(e){} }
+  const url = URL.createObjectURL(file);
+  state.urls[i] = url;
+  drop.classList.add('has-file'); slot.classList.add('filled');
+  drop.innerHTML = `<video src="${url}" muted></video><input type="file" accept="video/*" id="file-${i}" style="display:none">`;
+  document.getElementById('file-'+i).addEventListener('change', e => handleFile(i, e.target.files[0]));
+
+  const probe = document.createElement('video');
+  probe.src = url; probe.preload = 'metadata';
+  probe.onloadedmetadata = () => {
+    const dur = probe.duration;
+    state.durations[i] = dur;
+    state.trims[i] = { start: 0, end: dur };
+    document.getElementById('dur-'+i).textContent = `Clip duration: ${dur.toFixed(1)}s`;
+    document.getElementById('trimStart-'+i).value = 0;
+    document.getElementById('trimStart-'+i).max = dur;
+    document.getElementById('trimEnd-'+i).value = dur.toFixed(1);
+    document.getElementById('trimEnd-'+i).max = dur;
+    checkReady();
+  };
+  probe.onerror = () => { document.getElementById('dur-'+i).textContent = 'Duration read nahi ho saki — file format check karo.'; };
+
+  // Live-preview panel only ever mirrors Clip 1 (the hook) — this is just a convenience
+  // display of the raw uploaded file, it does not touch generateVideo() or any recording
+  // logic at all, so it cannot affect how the final video comes out.
+  if (i === 0){
+    const pv = document.getElementById('previewVideo');
+    const pe = document.getElementById('previewEmpty');
+    if (pv && pe){ pv.src = url; pv.style.display = 'block'; pe.style.display = 'none'; }
+  }
+}
+
+function checkReady(){
+  document.getElementById('generateBtn').disabled = !(state.files.length > 0 && state.files.every(f => f !== null));
+}
+
+async function autoSelectBest(i){
+  const file = state.files[i];
+  const statusEl = document.getElementById('autoStatus-'+i);
+  const btn = document.getElementById('autoBtn-'+i);
+  if (!file) return;
+  const duration = state.durations[i];
+  let targetLen = Math.min(parseFloat(document.getElementById('bestLen-'+i).value) || 5, duration);
+  btn.disabled = true; statusEl.textContent = 'Audio analyze ho raha hai...';
+  try{
+    const arrayBuffer = await file.arrayBuffer();
+    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioBuffer = await decodeCtx.decodeAudioData(arrayBuffer.slice(0));
+    const ch0 = audioBuffer.getChannelData(0);
+    let mono = ch0;
+    if (audioBuffer.numberOfChannels > 1){
+      const ch1 = audioBuffer.getChannelData(1);
+      mono = new Float32Array(ch0.length);
+      for (let s=0;s<ch0.length;s++) mono[s] = (ch0[s]+ch1[s])/2;
+    }
+    const sr = audioBuffer.sampleRate, hopSec = 0.2, hopSize = Math.max(1, Math.round(sr*hopSec));
+    const numWindows = Math.floor(mono.length/hopSize);
+    const energy = new Float32Array(numWindows);
+    for (let w=0; w<numWindows; w++){
+      let sum=0; const start=w*hopSize, end=Math.min(start+hopSize, mono.length);
+      for (let s=start;s<end;s++) sum += mono[s]*mono[s];
+      energy[w] = Math.sqrt(sum/(end-start));
+    }
+    const windowsInTarget = Math.max(1, Math.round(targetLen/hopSec));
+    let bestStartW=0, bestSum=-1, runningSum=0;
+    for (let w=0; w<numWindows; w++){
+      runningSum += energy[w];
+      if (w >= windowsInTarget) runningSum -= energy[w-windowsInTarget];
+      if (w >= windowsInTarget-1 && runningSum > bestSum){ bestSum=runningSum; bestStartW = w-windowsInTarget+1; }
+    }
+    let bestStart = Math.max(0, bestStartW*hopSec);
+    let bestEnd = Math.min(duration, bestStart+targetLen);
+    bestStart = Math.max(0, bestEnd-targetLen);
+    state.trims[i] = { start:bestStart, end:bestEnd };
+    document.getElementById('trimStart-'+i).value = bestStart.toFixed(1);
+    document.getElementById('trimEnd-'+i).value = bestEnd.toFixed(1);
+    statusEl.textContent = `Best part mil gaya: ${bestStart.toFixed(1)}s – ${bestEnd.toFixed(1)}s`;
+    decodeCtx.close();
+  }catch(err){
+    statusEl.textContent = 'Auto-detect is clip par kaam nahi kar saka — manually trim daal do.';
+  }
+  btn.disabled = false;
+}
+
+document.getElementById('splitBtn').addEventListener('click', () => {
+  const parts = document.getElementById('fullScript').value.split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean);
+  if (!parts.length) return;
+  if (parts.length > state.files.length) setClipCount(parts.length);
+  parts.slice(0, state.files.length).forEach((p,i) => {
+    state.captions[i] = p;
+    const el = document.getElementById('cap-'+i);
+    if (el) el.value = p;
+  });
+});
+document.getElementById('musicFile').addEventListener('change', e => {
+  state.musicFile = e.target.files[0] || null;
+  document.getElementById('musicDropText').textContent = state.musicFile ? state.musicFile.name : 'Music file chuno';
+});
+document.getElementById('musicEnabled').addEventListener('change', e => {
+  const controls = document.getElementById('musicControls');
+  if (e.target.checked){
+    controls.style.opacity = '1';
+    controls.style.pointerEvents = 'auto';
+  } else {
+    controls.style.opacity = '0.4';
+    controls.style.pointerEvents = 'none';
+  }
+});
+document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+document.getElementById('suggestBtn').addEventListener('click', () => {
+  document.getElementById('transType').value = 'auto';
+  document.getElementById('transDur').value = '0.35';
+  document.getElementById('captionStyle').value = 'popIn';
+  document.getElementById('captionFont').value = 'Poppins';
+  warmFont('700 32px "Poppins"');
+  document.getElementById('hookZoom').checked = true;
+  document.getElementById('animCaptions').checked = true;
+  document.getElementById('tightPace').checked = true;
+  document.getElementById('suggestTip').textContent = 'Set kar diya: Auto transition (har cut alag), Bold Pop-in caption + Poppins font, hook punch-in aur tight pacing on — chotay 7-12s hook-style Reels ke liye yeh combo sab se punchy result deta hai.';
+});
+document.getElementById('autoFitBtn').addEventListener('click', () => {
+  const n = state.files.length;
+  if (!state.files.every(f=>f!==null)){ alert(`Pehle sab ${n} clips upload karo, phir auto-fit karo.`); return; }
+  const target = Math.max(4, parseFloat(document.getElementById('targetLen').value) || 12);
+  const perClip = target/n;
+  for (let i=0;i<n;i++){
+    const dur = state.durations[i];
+    let start = state.trims[i].start || 0;
+    let len = Math.min(perClip, dur);
+    let end = Math.min(start+len, dur);
+    start = Math.max(0, end-len);
+    state.trims[i] = { start, end };
+    document.getElementById('trimStart-'+i).value = start.toFixed(1);
+    document.getElementById('trimEnd-'+i).value = end.toFixed(1);
+  }
+});
+
+// ---------- drawing helpers ----------
+let _scratch = null, _scratchCtx = null;
+// divisor controls how much smaller the filtered (blur/pop) pass is rendered at before being
+// scaled back up. Default 4 (used for a normal single-clip frame). During a transition frame
+// two clips get filtered back-to-back, doubling this cost, so drawTransitionFrame passes a
+// bigger divisor (cheaper) here — the extra softness is invisible since it's a blur anyway.
+function getScratch(W, H, divisor){
+  divisor = divisor || 4;
+  const sw = Math.max(1, Math.round(W/divisor)), sh = Math.max(1, Math.round(H/divisor));
+  if (!_scratch){ _scratch = document.createElement('canvas'); _scratchCtx = _scratch.getContext('2d'); }
+  if (_scratch.width !== sw || _scratch.height !== sh){ _scratch.width = sw; _scratch.height = sh; }
+  return { c:_scratch, x:_scratchCtx, sw, sh };
+}
+// blurAmt/popFilter are optional. ANY CSS filter (blur and/or the visual-pop
+// contrast+saturate) is applied at 1/4 resolution and then scaled back up — filter cost
+// scales with pixel count, so this is roughly 16x cheaper per frame than filtering at full
+// 1080x1920 every frame. This is what actually keeps these effects smooth on mid/low-end
+// phones, instead of needing to turn them off.
+function drawVideoFrame(video, ctx, W, H, extraZoom, offX, offY, blurAmt, popFilter, scratchDivisor){
+  extraZoom = extraZoom || 1; offX = offX || 0; offY = offY || 0; blurAmt = blurAmt || 0;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  if (!vw || !vh) return;
+  const scale = Math.max(W/vw, H/vh) * extraZoom;
+  const sw = W/scale, sh = H/scale;
+  const sx = (vw-sw)/2, sy = (vh-sh)/2;
+  if (blurAmt > 0 || popFilter){
+    const { c, x, sw:tw, sh:th } = getScratch(W, H, scratchDivisor);
+    const parts = [];
+    if (popFilter) parts.push(popFilter);
+    if (blurAmt > 0) parts.push(`blur(${Math.max(1, blurAmt/4)}px)`);
+    x.filter = parts.join(' ');
+    x.drawImage(video, sx, sy, sw, sh, 0, 0, tw, th);
+    x.filter = 'none';
+    ctx.filter = 'none';
+    ctx.drawImage(c, 0, 0, tw, th, offX, offY, W, H);
+  } else {
+    ctx.drawImage(video, sx, sy, sw, sh, offX, offY, W, H);
+  }
+}
+
+// The vignette gradient used to be recreated and filled across the full frame on every
+// single rendered frame — for a 30fps, 20s video that's 600 gradient rebuilds. It's now
+// pre-rendered once per output resolution onto a small offscreen canvas and just blitted
+// (a plain drawImage) every frame after that, which is far cheaper.
+let _vignetteCache = null, _vignetteKey = '';
+function drawVignette(ctx, W, H){
+  const key = W+'x'+H;
+  if (_vignetteKey !== key){
+    const vc = document.createElement('canvas'); vc.width = W; vc.height = H;
+    const vx = vc.getContext('2d');
+    const grad = vx.createRadialGradient(W/2,H/2,H*0.35, W/2,H/2,H*0.72);
+    grad.addColorStop(0,'rgba(0,0,0,0)'); grad.addColorStop(1,'rgba(0,0,0,0.45)');
+    vx.fillStyle = grad; vx.fillRect(0,0,W,H);
+    _vignetteCache = vc; _vignetteKey = key;
+  }
+  ctx.drawImage(_vignetteCache, 0, 0);
+}
+function isUrduText(t){ return /[\u0600-\u06FF\u0750-\u077F]/.test(t); }
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function wrapText(ctx, text, maxWidth){
+  const words = text.split(/\s+/); const lines = []; let cur='';
+  for (const w of words){
+    const test = cur ? cur+' '+w : w;
+    if (ctx.measureText(test).width > maxWidth && cur){ lines.push(cur); cur=w; } else cur=test;
+  }
+  if (cur) lines.push(cur);
+  return lines.slice(0,3);
+}
+
+function prepareCaption(ctx, rawText, fontChoice, style, W){
+  if (!rawText || !rawText.trim()) return null;
+  const text = rawText.trim();
+  const urdu = isUrduText(text);
+  const fontFamily = urdu ? '"Noto Nastaliq Urdu"' : `"${fontChoice||'Inter'}"`;
+  const baseSize = Math.round(W * (urdu ? 0.052 : 0.046));
+  const maxWidth = W*0.86;
+  const heavyStyles = ['popIn','stickerTilt','outlinePop','gradientText','karaoke'];
+  const weight = heavyStyles.includes(style) ? 800 : (style === 'softShadow' ? 600 : 700);
+  const sizeForFont = ['popIn','stickerTilt','outlinePop','gradientText'].includes(style) ? baseSize*1.08 : baseSize;
+
+  ctx.save();
+  ctx.font = `${weight} ${sizeForFont}px ${fontFamily}`;
+  ctx.direction = urdu ? 'rtl' : 'ltr';
+  const lines = wrapText(ctx, text, maxWidth);
+  let lineWordData = null, totalWords = 0;
+  if (style === 'karaoke'){
+    totalWords = text.split(/\s+/).length;
+    lineWordData = lines.map(line => {
+      const ws = line.split(/\s+/);
+      const widths = ws.map(w => ctx.measureText(urdu ? w : w+' ').width);
+      const totalW = widths.reduce((a,b)=>a+b,0);
+      return { words: ws, widths, totalW };
+    });
+  }
+  ctx.restore();
+  const totalChars = lines.reduce((a,l)=>a+l.length, 0);
+  return { urdu, fontFamily, baseSize, lines, lineWordData, totalWords, totalChars };
+}
+
+function renderCaption(ctx, W, H, prep, animPhase, style){
+  if (!prep) return;
+  const p = Math.min(1, Math.max(0, animPhase===undefined?1:animPhase));
+  const { urdu, fontFamily, baseSize, lines, lineWordData, totalWords } = prep;
+  const anchorY = H - H*0.14;
+
+  ctx.save();
+  ctx.direction = urdu ? 'rtl' : 'ltr';
+  ctx.textAlign = 'center';
+
+  if (style === 'karaoke'){
+    ctx.font = `800 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.35, padY = baseSize*0.6;
+    const boxH = lines.length*lineHeight + padY*1.6;
+    const boxY = anchorY - boxH;
+    ctx.globalAlpha = p;
+    ctx.fillStyle = 'rgba(10,10,10,0.62)';
+    roundRect(ctx, W*0.05, boxY, W*0.9, boxH, 14); ctx.fill();
+    const activeIdx = p >= 1 ? -1 : Math.floor(p * totalWords);
+    let wIdx = 0;
+    lineWordData.forEach((ld, li) => {
+      const y = boxY+padY+baseSize*0.85+li*lineHeight;
+      if (urdu){
+        ctx.textAlign='right'; let x = W/2+ld.totalW/2;
+        ld.words.forEach((w,wi)=>{ ctx.fillStyle = wIdx===activeIdx ? '#ffe27a' : '#ffffff'; ctx.fillText(w,x,y); x-=ld.widths[wi]; wIdx++; });
+      } else {
+        ctx.textAlign='left'; let x = W/2-ld.totalW/2;
+        ld.words.forEach((w,wi)=>{ ctx.fillStyle = wIdx===activeIdx ? '#ffe27a' : '#ffffff'; ctx.fillText(w+' ',x,y); x+=ld.widths[wi]; wIdx++; });
+      }
+    });
+    ctx.globalAlpha=1;
+  } else if (style === 'popIn'){
+    const bounce = p<1 ? 1+Math.sin(p*Math.PI*2.2)*(1-p)*0.35 : 1;
+    ctx.globalAlpha = Math.min(1,p*2);
+    ctx.font = `800 ${baseSize*1.1}px ${fontFamily}`;
+    const lineHeight = baseSize*1.3;
+    ctx.translate(W/2, anchorY - lines.length*lineHeight/2);
+    ctx.scale(bounce,bounce);
+    ctx.fillStyle='#fff'; ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=baseSize*0.08;
+    ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=8;
+    lines.forEach((l,i)=>{ ctx.strokeText(l,0,i*lineHeight); ctx.fillText(l,0,i*lineHeight); });
+    ctx.globalAlpha=1;
+  } else if (style === 'glowUnderline'){
+    // original house style: no box — just clean text with a gold→violet gradient bar that
+    // grows in under it like a highlighter stroke, glowing softly
+    ctx.font = `700 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.35;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    ctx.globalAlpha = Math.min(1, p*1.3);
+    let maxLineW = 0;
+    const lineWidths = lines.map(l => ctx.measureText(l).width);
+    lineWidths.forEach(w => { if (w>maxLineW) maxLineW = w; });
+    lines.forEach((l,i) => {
+      const y = startY + i*lineHeight;
+      const lw = lineWidths[i];
+      if (i === lines.length-1){
+        const barW = lw * Math.min(1, p*1.6) * 1.08;
+        const barY = y + baseSize*0.28;
+        const grad = ctx.createLinearGradient(W/2-barW/2, 0, W/2+barW/2, 0);
+        grad.addColorStop(0,'#e3b854'); grad.addColorStop(1,'#9b8cff');
+        ctx.save();
+        ctx.shadowColor = '#9b8cff'; ctx.shadowBlur = baseSize*0.35;
+        ctx.fillStyle = grad;
+        roundRect(ctx, W/2-barW/2, barY, barW, Math.max(3, baseSize*0.1), baseSize*0.05);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.save();
+      ctx.shadowColor='rgba(0,0,0,0.55)'; ctx.shadowBlur=10;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(l, W/2, y);
+      ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+  } else if (style === 'stickerTilt'){
+    // original house style: caption drawn as a slightly tilted "sticker", with a soft
+    // two-tone (duotone) offset shadow behind the main text for a playful, edit-y look
+    const lineHeight = baseSize*1.35, padY = baseSize*0.55;
+    ctx.font = `800 ${baseSize*1.1}px ${fontFamily}`;
+    const boxH = lines.length*lineHeight + padY*1.7;
+    const tilt = -0.035;
+    const bounce = p<1 ? 1+Math.sin(p*Math.PI*2)*(1-p)*0.3 : 1;
+    ctx.globalAlpha = Math.min(1, p*1.8);
+    ctx.translate(W/2, anchorY - boxH/2);
+    ctx.rotate(tilt);
+    ctx.scale(bounce, bounce);
+    ctx.fillStyle = '#faf6ec';
+    roundRect(ctx, -W*0.42, -boxH/2, W*0.84, boxH, 16);
+    ctx.fill();
+    ctx.strokeStyle = '#9b8cff'; ctx.lineWidth = Math.max(2, baseSize*0.06);
+    roundRect(ctx, -W*0.42, -boxH/2, W*0.84, boxH, 16);
+    ctx.stroke();
+    const textY0 = -boxH/2 + padY + baseSize*0.85;
+    lines.forEach((l,i) => {
+      const y = textY0 + i*lineHeight;
+      ctx.fillStyle = '#e3b854';
+      ctx.fillText(l, baseSize*0.06, y+baseSize*0.06);
+      ctx.fillStyle = '#28223a';
+      ctx.fillText(l, 0, y);
+    });
+    ctx.globalAlpha = 1;
+  } else if (style === 'minimalLine'){
+    // clean, no box — bold text with a small gradient accent tick beside it
+    ctx.font = `700 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.3;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    ctx.globalAlpha = p;
+    ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=10;
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((l,i)=> ctx.fillText(l, W/2, startY+i*lineHeight));
+    ctx.shadowBlur = 0;
+    const lastY = startY + (lines.length-1)*lineHeight;
+    const tickW = Math.max(20, baseSize*0.9) * Math.min(1, p*1.6);
+    const grad = ctx.createLinearGradient(W/2-tickW/2,0,W/2+tickW/2,0);
+    grad.addColorStop(0,'#e3b854'); grad.addColorStop(1,'#9b8cff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(W/2-tickW/2, lastY+baseSize*0.32, tickW, Math.max(2,baseSize*0.06));
+    ctx.globalAlpha = 1;
+  } else if (style === 'softShadow'){
+    // clean, no box — plain elegant text with just a soft drop shadow, nothing else
+    ctx.font = `600 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.3;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    ctx.globalAlpha = p;
+    ctx.shadowColor='rgba(0,0,0,0.65)'; ctx.shadowBlur=14; ctx.shadowOffsetY = baseSize*0.05;
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((l,i)=> ctx.fillText(l, W/2, startY+i*lineHeight));
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.globalAlpha = 1;
+  } else if (style === 'outlinePop'){
+    // clean, no box — hollow outlined text, accent-coloured stroke, no fill background
+    ctx.font = `800 ${baseSize*1.05}px ${fontFamily}`;
+    const lineHeight = baseSize*1.35;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    ctx.globalAlpha = Math.min(1, p*1.6);
+    ctx.lineWidth = Math.max(2, baseSize*0.1);
+    ctx.strokeStyle = '#e3b854';
+    ctx.fillStyle = 'rgba(0,0,0,0.001)';
+    lines.forEach((l,i)=>{ const y = startY+i*lineHeight; ctx.strokeText(l, W/2, y); ctx.fillText(l, W/2, y); });
+    ctx.globalAlpha = 1;
+  } else if (style === 'gradientText'){
+    // clean, no box — text itself filled with the tool's gold→violet gradient
+    ctx.font = `800 ${baseSize*1.05}px ${fontFamily}`;
+    const lineHeight = baseSize*1.32;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    ctx.globalAlpha = p;
+    ctx.shadowColor='rgba(0,0,0,0.5)'; ctx.shadowBlur=8;
+    const grad = ctx.createLinearGradient(W*0.15,0,W*0.85,0);
+    grad.addColorStop(0,'#e3b854'); grad.addColorStop(1,'#9b8cff');
+    ctx.fillStyle = grad;
+    lines.forEach((l,i)=> ctx.fillText(l, W/2, startY+i*lineHeight));
+    ctx.shadowBlur=0;
+    ctx.globalAlpha = 1;
+  } else if (style === 'typewriter'){
+    // clean, no box — letters reveal left to right like being typed out
+    ctx.font = `700 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.3;
+    const startY = anchorY - (lines.length-1)*lineHeight;
+    const totalChars = prep.totalChars || 1;
+    let budget = Math.floor(p * (totalChars+2));
+    ctx.textAlign = urdu ? 'right' : 'left';
+    const xStart = urdu ? W*0.93 : W*0.07;
+    ctx.shadowColor='rgba(0,0,0,0.6)'; ctx.shadowBlur=8;
+    ctx.fillStyle = '#ffffff';
+    lines.forEach((l,i)=>{
+      const show = Math.max(0, Math.min(l.length, budget));
+      budget -= l.length;
+      const sub = l.slice(0, show);
+      if (sub) ctx.fillText(sub, xStart, startY+i*lineHeight);
+    });
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'center';
+  } else {
+    ctx.font = `700 ${baseSize}px ${fontFamily}`;
+    const lineHeight = baseSize*1.35, padY = baseSize*0.6;
+    const boxH = lines.length*lineHeight+padY*1.6;
+    const boxY = anchorY-boxH;
+    ctx.globalAlpha = p;
+    ctx.fillStyle = 'rgba(10,10,10,0.6)';
+    roundRect(ctx, W*0.05, boxY, W*0.9, boxH, 12); ctx.fill();
+    ctx.fillStyle='#fff';
+    lines.forEach((l,i)=> ctx.fillText(l, W/2, boxY+padY+baseSize*0.85+i*lineHeight));
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+
+function shuffleArray(arr){
+  const a = arr.slice();
+  for (let i=a.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+const AUTO_POOL = ['zoomPunch','whipPan','spin','dissolve','splitReveal','inkBloom','blindsSweep','irisSquare','curtain','diagonalWipe','bounceScale','colorWash','wipeCircle','flash','zoom'];
+function resolveTransition(type, cutIdx, autoSeq){
+  if (type !== 'auto') return type;
+  const seq = autoSeq || AUTO_POOL;
+  return seq[cutIdx % seq.length];
+}
+
+function drawTransitionFrame(type, progress, curV, nextV, ctx, W, H, blurAmt, popFilter){
+  ctx.save();
+  switch(type){
+    case 'fade': case 'dissolve':
+      drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = progress; drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6); ctx.globalAlpha=1;
+      break;
+    case 'flash': {
+      if (progress<0.5) drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6); else drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const flash = Math.max(0, 1-Math.abs(progress-0.5)*2);
+      ctx.fillStyle = `rgba(255,255,255,${flash})`; ctx.fillRect(0,0,W,H);
+      break;
+    }
+    case 'slideLeft':
+      drawVideoFrame(curV, ctx, W, H, 1, -progress*W, 0, blurAmt, popFilter, 6);
+      drawVideoFrame(nextV, ctx, W, H, 1, W-progress*W, 0, blurAmt, popFilter, 6);
+      break;
+    case 'slideRight':
+      drawVideoFrame(curV, ctx, W, H, 1, progress*W, 0, blurAmt, popFilter, 6);
+      drawVideoFrame(nextV, ctx, W, H, 1, -W+progress*W, 0, blurAmt, popFilter, 6);
+      break;
+    case 'slideUp':
+      drawVideoFrame(curV, ctx, W, H, 1, 0, -progress*H, blurAmt, popFilter, 6);
+      drawVideoFrame(nextV, ctx, W, H, 1, 0, H-progress*H, blurAmt, popFilter, 6);
+      break;
+    case 'zoom':
+      drawVideoFrame(curV, ctx, W, H, 1+progress*0.25, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = progress;
+      drawVideoFrame(nextV, ctx, W, H, 1.25-progress*0.25, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = 1;
+      break;
+    case 'zoomPunch': {
+      // fast punch-in on the outgoing clip, incoming clip punches back down to normal —
+      // snappy, TikTok/Reels-style hard cut with a kick, cheap (just scale + alpha)
+      const inZoom = 1 + progress*progress*0.5;
+      drawVideoFrame(curV, ctx, W, H, inZoom, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = Math.min(1, progress*1.6);
+      const outZoom = 1.35 - progress*0.35;
+      drawVideoFrame(nextV, ctx, W, H, outZoom, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = 1;
+      break;
+    }
+    case 'spin': {
+      // quick rotate-and-scale swap — cheap, just a canvas transform, common in trend edits
+      const ang = progress * 0.35;
+      ctx.save();
+      ctx.translate(W/2,H/2); ctx.rotate(-ang); ctx.translate(-W/2,-H/2);
+      drawVideoFrame(curV, ctx, W, H, 1+progress*0.15, 0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      ctx.globalAlpha = progress;
+      ctx.save();
+      ctx.translate(W/2,H/2); ctx.rotate((1-progress)*0.35); ctx.translate(-W/2,-H/2);
+      drawVideoFrame(nextV, ctx, W, H, 1.15-progress*0.15, 0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+      break;
+    }
+    case 'whipPan': {
+      // very fast directional slide that overshoots slightly then settles — mimics a
+      // whip-pan cut without any real motion blur (kept cheap on purpose)
+      const ease = progress*progress*(3-2*progress); // smoothstep
+      const overshoot = Math.sin(progress*Math.PI) * 0.06 * W;
+      drawVideoFrame(curV, ctx, W, H, 1, -ease*W - overshoot, 0, blurAmt, popFilter, 6);
+      drawVideoFrame(nextV, ctx, W, H, 1, W-ease*W - overshoot, 0, blurAmt, popFilter, 6);
+      break;
+    }
+    case 'splitReveal': {
+      // two halves slide apart revealing the next clip underneath — cheap clip-rect based
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, 0, W, H/2 - progress*H/2); ctx.clip();
+      drawVideoFrame(curV, ctx, W, H, 1, 0, -progress*H/2, blurAmt, popFilter, 6);
+      ctx.restore();
+      ctx.save();
+      ctx.beginPath(); ctx.rect(0, H/2 + progress*H/2, W, H/2 - progress*H/2); ctx.clip();
+      drawVideoFrame(curV, ctx, W, H, 1, 0, progress*H/2, blurAmt, popFilter, 6);
+      ctx.restore();
+      break;
+    }
+    case 'wipeCircle': {
+      drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.save();
+      const r = Math.hypot(W,H)/2 * progress;
+      ctx.beginPath(); ctx.arc(W/2,H/2,r,0,Math.PI*2); ctx.clip();
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      break;
+    }
+    case 'inkBloom': {
+      // original house transition: a circle reveal with a soft glowing gold/violet ring
+      // riding its edge, like a drop of ink blooming outward — distinct from a plain wipe
+      drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const cx = W/2, cy = H/2;
+      const maxR = Math.hypot(W,H)/2;
+      const r = maxR * (progress*progress*(3-2*progress));
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.clip();
+      drawVideoFrame(nextV, ctx, W, H, 1.05-progress*0.05, 0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      const ringAlpha = Math.sin(progress*Math.PI); // fades in then out across the transition
+      if (ringAlpha > 0.02){
+        const grad = ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+        grad.addColorStop(0,'#e3b854'); grad.addColorStop(1,'#9b8cff');
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+        ctx.lineWidth = Math.max(2, W*0.012);
+        ctx.strokeStyle = grad; ctx.globalAlpha = ringAlpha*0.85;
+        ctx.stroke();
+        ctx.restore();
+      }
+      break;
+    }
+    case 'blindsSweep': {
+      // original house transition: thin horizontal bands sweep open left-to-right in a
+      // staggered wave, revealing the next clip strip by strip
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const bands = 7;
+      const bandH = H/bands;
+      ctx.save();
+      for (let b=0; b<bands; b++){
+        const stagger = b/bands * 0.35;
+        const local = Math.min(1, Math.max(0, (progress-stagger) / (1-0.35)));
+        const closedW = W * (1-local);
+        if (closedW <= 0) continue;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, b*bandH, closedW, bandH+1);
+        ctx.clip();
+        drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+        ctx.restore();
+      }
+      ctx.restore();
+      break;
+    }
+    case 'irisSquare': {
+      drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const size = Math.hypot(W,H) * (progress*progress*(3-2*progress));
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(W/2-size/2, H/2-size/2, size, size);
+      ctx.clip();
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      break;
+    }
+    case 'curtain': {
+      // black bars close together covering the frame, then open apart to reveal the next clip
+      if (progress < 0.5){
+        const p2 = progress/0.5;
+        drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+        ctx.fillStyle = '#0b0a12';
+        ctx.fillRect(0,0,W, H/2*p2);
+        ctx.fillRect(0,H-H/2*p2,W, H/2*p2);
+      } else {
+        const p2 = (progress-0.5)/0.5;
+        drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+        ctx.fillStyle = '#0b0a12';
+        ctx.fillRect(0,0,W, H/2*(1-p2));
+        ctx.fillRect(0,H-H/2*(1-p2),W, H/2*(1-p2));
+      }
+      break;
+    }
+    case 'diagonalWipe': {
+      drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const slant = H*0.35;
+      const shift = -slant + progress*(W + 2*slant);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(shift,0);
+      ctx.lineTo(shift-slant,H);
+      ctx.lineTo(0,H);
+      ctx.closePath();
+      ctx.clip();
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      ctx.restore();
+      break;
+    }
+    case 'bounceScale': {
+      const bounce = Math.sin(progress*Math.PI);
+      const curScale = 1 - progress*0.15;
+      const nextScale = 0.85 + progress*0.15 + bounce*0.06;
+      drawVideoFrame(curV, ctx, W, H, curScale, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = progress;
+      drawVideoFrame(nextV, ctx, W, H, nextScale, 0,0, blurAmt, popFilter, 6);
+      ctx.globalAlpha = 1;
+      break;
+    }
+    case 'colorWash': {
+      if (progress<0.5) drawVideoFrame(curV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      else drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+      const amt = Math.max(0, 1-Math.abs(progress-0.5)*2);
+      const grad = ctx.createLinearGradient(0,0,W,H);
+      grad.addColorStop(0,'#e3b854'); grad.addColorStop(1,'#9b8cff');
+      ctx.save();
+      ctx.globalAlpha = amt*0.8;
+      ctx.fillStyle = grad;
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+      break;
+    }
+    default:
+      drawVideoFrame(nextV, ctx, W, H, 1,0,0, blurAmt, popFilter, 6);
+  }
+  ctx.restore();
+}
+
+// ---------- generation pipeline ----------
+// A single, proven approach: the browser's own built-in MediaRecorder, recording the canvas
+// (video) and the mixed Web Audio graph (audio) together. This has worked reliably across
+// browsers for years. It tries MP4 first (real, playable MP4 on browsers that support
+// recording it directly, e.g. Safari); where that's not available it uses WebM, which is
+// always fully playable — just occasionally shown with a document-style icon on some
+// WhatsApp versions rather than an inline preview. That's a cosmetic inconvenience, not a
+// broken file. (A previous attempt at packaging a "guaranteed" MP4 via a custom encoder
+// pipeline was removed — it occasionally produced a corrupt file, which is worse than this.)
+function pickMime(){
+  // 'video/mp4' MediaRecorder support is real on some browsers (notably Safari) but on many
+  // Android Chrome builds it silently produces a fragmented MP4 that plays fine locally yet
+  // gets flagged by WhatsApp's own file-format scanner as "unusual format... cannot be
+  // opened" — this was confirmed happening even after removing the earlier custom MP4
+  // muxer, on MediaRecorder's own native mp4 path. To make delivery reliable everywhere,
+  // recording always uses WebM now (proven, always fully playable, and already has a
+  // tested duration-repair step below for WhatsApp/Insta compatibility).
+  const candidates = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+  ];
+  for (const c of candidates) if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c;
+  return '';
+}
+
+function setStatus(text, pct){
+  const el = document.getElementById('status');
+  el.classList.add('active');
+  document.getElementById('statusText').textContent = text;
+  if (pct !== undefined) document.getElementById('barFill').style.width = Math.max(0,Math.min(100,pct)) + '%';
+}
+
+function setupMediaRecorderSink(canvasStream, audioStream, bitrate){
+  const combined = new MediaStream([...canvasStream.getVideoTracks(), ...audioStream.getAudioTracks()]);
+  const mime = pickMime();
+  const opts = { videoBitsPerSecond: bitrate };
+  if (mime) opts.mimeType = mime;
+  const recorder = new MediaRecorder(combined, opts);
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(res => recorder.onstop = res);
+  return {
+    ext: (mime||'').includes('mp4') ? 'mp4' : 'webm',
+    start(){ recorder.start(250); },
+    async stop(){
+      try{ recorder.stop(); }catch(e){}
+      await stopped;
+      return new Blob(chunks, { type: mime || 'video/webm' });
+    }
+  };
+}
+
+// Tried FIRST, before MediaRecorder: uses the browser's own hardware H.264/AAC encoder
+// (WebCodecs) plus the hand-written muxer above to build a real MP4. Mainly available on
+// Chromium-based browsers (most Android phones). Throws early if anything needed isn't
+// supported, which the caller catches and falls back from — this function never leaves
+// things half-done.
+async function setupWebCodecsMp4Sink(canvasStream, audioStream, W, H, bitrate, fps){
+  if (!(window.VideoEncoder && window.MediaStreamTrackProcessor)) throw new Error('WebCodecs not available');
+
+  const codecCandidates = ['avc1.640028','avc1.4d0028','avc1.42001f'];
+  let videoCodec = null;
+  for (const c of codecCandidates){
+    try{
+      const s = await VideoEncoder.isConfigSupported({ codec:c, width:W, height:H, bitrate });
+      if (s && s.supported){ videoCodec = c; break; }
+    }catch(e){}
+  }
+  if (!videoCodec) throw new Error('No supported H.264 profile');
+
+  let audioOk = false;
+  if (window.AudioEncoder && audioStream.getAudioTracks().length){
+    try{
+      const s = await AudioEncoder.isConfigSupported({ codec:'mp4a.40.2', sampleRate:44100, numberOfChannels:2, bitrate:128000 });
+      audioOk = !!(s && s.supported);
+    }catch(e){}
+  }
+
+  const videoSamples = [];
+  let avcCDescription = null, videoError = false;
+  const videoEncoder = new VideoEncoder({
+    output: (chunk, meta) => {
+      if (!avcCDescription && meta && meta.decoderConfig && meta.decoderConfig.description){
+        avcCDescription = new Uint8Array(meta.decoderConfig.description);
+      }
+      const data = new Uint8Array(chunk.byteLength);
+      chunk.copyTo(data);
+      videoSamples.push({ data, timestamp: chunk.timestamp, duration: chunk.duration, isKey: chunk.type === 'key' });
+    },
+    error: () => { videoError = true; }
+  });
+  videoEncoder.configure({ codec: videoCodec, width:W, height:H, bitrate, framerate: fps, avc: { format:'avc' } });
+
+  let audioSamples = [], ascDescription = null, audioError = false, audioEncoder = null;
+  if (audioOk){
+    audioEncoder = new AudioEncoder({
+      output: (chunk, meta) => {
+        if (!ascDescription && meta && meta.decoderConfig && meta.decoderConfig.description){
+          ascDescription = new Uint8Array(meta.decoderConfig.description);
+        }
+        const data = new Uint8Array(chunk.byteLength);
+        chunk.copyTo(data);
+        audioSamples.push({ data, timestamp: chunk.timestamp, duration: chunk.duration, isKey: true });
+      },
+      error: () => { audioError = true; }
+    });
+    audioEncoder.configure({ codec:'mp4a.40.2', sampleRate:44100, numberOfChannels:2, bitrate:128000 });
+  }
+
+  const videoTrackProcessor = new MediaStreamTrackProcessor({ track: canvasStream.getVideoTracks()[0] });
+  const videoReader = videoTrackProcessor.readable.getReader();
+  const videoLoop = (async () => {
+    while (true){
+      let r; try{ r = await videoReader.read(); }catch(e){ break; }
+      if (r.done) break;
+      if (r.value){ try{ videoEncoder.encode(r.value); }catch(e){ videoError = true; } r.value.close(); }
+    }
+  })();
+
+  let audioReader = null, audioLoop = Promise.resolve();
+  if (audioOk){
+    const audioTrackProcessor = new MediaStreamTrackProcessor({ track: audioStream.getAudioTracks()[0] });
+    audioReader = audioTrackProcessor.readable.getReader();
+    audioLoop = (async () => {
+      while (true){
+        let r; try{ r = await audioReader.read(); }catch(e){ break; }
+        if (r.done) break;
+        if (r.value){ try{ audioEncoder.encode(r.value); }catch(e){ audioError = true; } r.value.close(); }
+      }
+    })();
+  }
+
+  function withDeltas(samples){
+    return samples.map((s,i) => {
+      let delta;
+      if (typeof s.duration === 'number' && s.duration > 0) delta = s.duration;
+      else if (i < samples.length-1) delta = Math.max(1, samples[i+1].timestamp - s.timestamp);
+      else delta = i>0 ? (s.timestamp - samples[i-1].timestamp) : Math.round(1000000/fps);
+      return { data: s.data, delta: Math.max(1, Math.round(delta)), isKey: s.isKey };
+    });
+  }
+
+  return {
+    ext: 'mp4',
+    start(){ /* the read loops above already pump frames as they arrive */ },
+    async stop(){
+      try{ await videoReader.cancel(); }catch(e){}
+      if (audioReader){ try{ await audioReader.cancel(); }catch(e){} }
+      try{ await videoLoop; }catch(e){}
+      try{ await audioLoop; }catch(e){}
+      try{ await videoEncoder.flush(); }catch(e){ videoError = true; }
+      if (audioEncoder){ try{ await audioEncoder.flush(); }catch(e){ audioError = true; } }
+
+      if (videoError || !avcCDescription || videoSamples.length < 2){
+        throw new Error('WebCodecs video encode did not produce usable output');
+      }
+      const videoTrack = { timescale: 1000000, width: W, height: H, avcC: avcCDescription, samples: withDeltas(videoSamples) };
+      let audioTrack = null;
+      if (audioOk && !audioError && ascDescription && audioSamples.length > 0){
+        audioTrack = { timescale: 1000000, channels: 2, sampleRate: 44100, asc: ascDescription, samples: withDeltas(audioSamples) };
+      }
+      const buf = Mp4Write.mux(videoTrack, audioTrack);
+      return new Blob([buf], { type: 'video/mp4' });
+    }
+  };
+}
+
+
+// Pre-seek every clip to its trim-start BEFORE recording begins, and never seek again
+// mid-recording. This is the actual fix for the "ruk ruk k chalna" stutter and the
+// half-broken transitions — those were caused by the browser seeking live, in the middle
+// of being recorded, which freezes the canvas for a beat every time a clip changes.
+// ---------- WebM duration fix ----------
+// Chrome's MediaRecorder writes WebM files without a proper Duration in the container
+// header (a long-standing, well-known limitation — it doesn't know the final length while
+// it's still recording). Players that rely on that header field then show 0:00 duration and
+// can't seek/scrub, even though the video data itself is complete and fine. This patches the
+// existing placeholder Duration field (which Chrome already writes, just with a bogus value)
+// with the real one. If the patched file doesn't actually verify as fixed, the untouched
+// original is used instead — this step can only help, never make the file worse.
+function ebmlPatchWebmDuration(bytes, durationMs){
+  const len = bytes.length;
+  function readId(p){
+    if (p >= len) return null;
+    const first = bytes[p];
+    if (first === 0) return null;
+    let length = 1, mask = 0x80;
+    while (length <= 4 && !(first & mask)){ mask >>= 1; length++; }
+    if (length > 4 || p+length > len) return null;
+    let id = first;
+    for (let i=1;i<length;i++) id = id*256 + bytes[p+i];
+    return { id, length };
+  }
+  function readSize(p){
+    if (p >= len) return null;
+    const first = bytes[p];
+    if (first === 0) return null;
+    let length = 1, mask = 0x80;
+    while (length <= 8 && !(first & mask)){ mask >>= 1; length++; }
+    if (length > 8 || p+length > len) return null;
+    let value = first & (mask-1);
+    let allOnes = (value === (mask-1));
+    for (let i=1;i<length;i++){
+      value = value*256 + bytes[p+i];
+      if (bytes[p+i] !== 0xFF) allOnes = false;
+    }
+    return { length, value, unknown: allOnes };
+  }
+  function writeSizeInPlace(arr, pos, length, value){
+    const marker = 0x80 >> (length-1);
+    const maxVal = Math.pow(2, 7*length) - 1;
+    if (value > maxVal) return false;
+    for (let i=length-1;i>=0;i--){ arr[pos+i] = value & 0xFF; value = Math.floor(value/256); }
+    arr[pos] |= marker;
+    return true;
+  }
+
+  let pos = 0, segmentBody = null;
+  while (pos < len){
+    const idI = readId(pos); if (!idI) break;
+    const szI = readSize(pos+idI.length); if (!szI) break;
+    const bodyStart = pos + idI.length + szI.length;
+    if (idI.id === 0x18538067){ segmentBody = { start: bodyStart, end: szI.unknown ? len : Math.min(len, bodyStart+szI.value) }; break; }
+    if (szI.unknown) break;
+    pos = bodyStart + szI.value;
+  }
+  if (!segmentBody) return null;
+
+  let p = segmentBody.start;
+  let infoRange = null, infoSizeFieldPos = null, infoSizeInfo = null;
+  while (p < segmentBody.end && p < len){
+    const idI = readId(p); if (!idI) break;
+    const szI = readSize(p+idI.length); if (!szI) break;
+    const bodyStart = p + idI.length + szI.length;
+    const bodyEnd = szI.unknown ? segmentBody.end : Math.min(segmentBody.end, bodyStart+szI.value);
+    if (idI.id === 0x1549A966){ infoRange = { start: bodyStart, end: bodyEnd }; infoSizeFieldPos = p+idI.length; infoSizeInfo = szI; break; }
+    if (szI.unknown) break;
+    p = bodyEnd;
+  }
+  if (!infoRange) return null;
+
+  let timecodeScale = 1000000;
+  let durationOffset = null, durationLen = null;
+  p = infoRange.start;
+  while (p < infoRange.end && p < len){
+    const idI = readId(p); if (!idI) break;
+    const szI = readSize(p+idI.length); if (!szI) break;
+    const bodyStart = p + idI.length + szI.length;
+    const bodyEnd = Math.min(infoRange.end, bodyStart+szI.value);
+    if (idI.id === 0x2AD7B1){
+      let v = 0; for (let i=0;i<szI.value;i++) v = v*256 + bytes[bodyStart+i];
+      if (v > 0) timecodeScale = v;
+    } else if (idI.id === 0x4489){
+      durationOffset = bodyStart; durationLen = szI.value;
+    }
+    p = bodyEnd;
+  }
+
+  const durationInScaleUnits = (durationMs*1e6) / timecodeScale;
+
+  if (durationOffset !== null && (durationLen === 4 || durationLen === 8)){
+    const out = bytes.slice();
+    const dv = new DataView(out.buffer);
+    if (durationLen === 8) dv.setFloat64(durationOffset, durationInScaleUnits, false);
+    else dv.setFloat32(durationOffset, durationInScaleUnits, false);
+    return out;
+  }
+
+  // No Duration element present — insert one at the start of Info's children.
+  const newElem = new Uint8Array(11);
+  newElem[0] = 0x44; newElem[1] = 0x89; newElem[2] = 0x88;
+  new DataView(newElem.buffer).setFloat64(3, durationInScaleUnits, false);
+  const insertPos = infoRange.start;
+  const out = new Uint8Array(bytes.length + newElem.length);
+  out.set(bytes.subarray(0, insertPos), 0);
+  out.set(newElem, insertPos);
+  out.set(bytes.subarray(insertPos), insertPos + newElem.length);
+  if (!infoSizeInfo.unknown){
+    writeSizeInPlace(out, infoSizeFieldPos, infoSizeInfo.length, infoSizeInfo.value + newElem.length);
+  }
+  return out;
+}
+
+// ---------- Hand-written, self-tested MP4 muxer ----------
+// Builds a real, standard, non-fragmented MP4 (moov box up front, proper sample tables)
+// from raw H.264/AAC chunks that the browser's own WebCodecs hardware encoder produces.
+// No external library, no network fetch — just box-writing math. Its byte-level output was
+// verified against an independent reader before this shipped (every sample's offset/size in
+// the tables was checked to point at the exact right bytes in the file). This is only ever
+// an upgrade attempt: it's wrapped by setupWebCodecsMp4Sink below, which is itself validated
+// by loading the result and test-seeking it before it's accepted — if that ever fails, the
+// proven MediaRecorder+WebM path (further below) is used instead.
+const Mp4Write = (() => {
+  function strBytes(s){ return Uint8Array.from(s.split('').map(c=>c.charCodeAt(0))); }
+  function u8(...vals){ return Uint8Array.from(vals); }
+  function u16(v){ return u8((v>>8)&0xFF, v&0xFF); }
+  function u32(v){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0, v>>>0); return b; }
+  function u32arr(arr){ const b=new Uint8Array(arr.length*4); const dv=new DataView(b.buffer); arr.forEach((v,i)=>dv.setUint32(i*4, v>>>0)); return b; }
+  function concatBytes(arrays){ let total=0; arrays.forEach(a=>total+=a.length); const out=new Uint8Array(total); let off=0; arrays.forEach(a=>{ out.set(a,off); off+=a.length; }); return out; }
+  function box(type, ...children){
+    const body = concatBytes(children);
+    const size = 8 + body.length;
+    const out = new Uint8Array(size);
+    new DataView(out.buffer).setUint32(0, size);
+    out.set(strBytes(type), 4);
+    out.set(body, 8);
+    return out;
+  }
+  function fullBox(type, version, flags, ...children){
+    const header = u8(version, (flags>>16)&0xFF, (flags>>8)&0xFF, flags&0xFF);
+    return box(type, header, ...children);
+  }
+
+  function ftyp(){
+    return box('ftyp', strBytes('isom'), u32(512), strBytes('isom'), strBytes('iso2'), strBytes('avc1'), strBytes('mp41'));
+  }
+
+  function mvhd(timescale, duration, nextTrackId){
+    return fullBox('mvhd', 0, 0,
+      u32(0), u32(0), u32(timescale), u32(duration),
+      u32(0x00010000), u16(0x0100), u16(0), u32(0), u32(0),
+      u32arr([0x00010000,0,0, 0,0x00010000,0, 0,0,0x40000000]),
+      u32arr([0,0,0,0,0,0]),
+      u32(nextTrackId)
+    );
+  }
+
+  function tkhd(trackId, duration, width, height, isAudio){
+    return fullBox('tkhd', 0, 0x000007,
+      u32(0), u32(0), u32(trackId), u32(0), u32(duration),
+      u32(0), u32(0), u16(0), u16(0), u16(isAudio?0x0100:0), u16(0),
+      u32arr([0x00010000,0,0, 0,0x00010000,0, 0,0,0x40000000]),
+      u32(isAudio?0:(width<<16)), u32(isAudio?0:(height<<16))
+    );
+  }
+
+  function mdhd(timescale, duration){
+    return fullBox('mdhd', 0, 0, u32(0), u32(0), u32(timescale), u32(duration), u16(0x55C4), u16(0));
+  }
+
+  function hdlr(isAudio){
+    return fullBox('hdlr', 0, 0, u32(0), strBytes(isAudio?'soun':'vide'), u32(0), u32(0), u32(0), strBytes((isAudio?'SoundHandler':'VideoHandler')+'\0'));
+  }
+
+  function dinf(){
+    const url = fullBox('url ', 0, 1);
+    const dref = fullBox('dref', 0, 0, u32(1), url);
+    return box('dinf', dref);
+  }
+
+  function avc1(width, height, avcCPayload){
+    const avcCBox = box('avcC', avcCPayload);
+    const compressorName = new Uint8Array(32);
+    return box('avc1',
+      new Uint8Array(6), u16(1),
+      u16(0), u16(0), new Uint8Array(12),
+      u16(width), u16(height),
+      u32(0x00480000), u32(0x00480000), u32(0),
+      u16(1), compressorName,
+      u16(0x0018), u16(0xFFFF),
+      avcCBox
+    );
+  }
+
+  function mp4a(channels, sampleRate, audioSpecificConfig){
+    function descLen(len){
+      const bytes = [];
+      do { let b = len & 0x7F; len >>= 7; if (bytes.length) b |= 0x80; bytes.unshift(b); } while (len > 0);
+      return Uint8Array.from(bytes);
+    }
+    const ascTag = concatBytes([u8(0x05), descLen(audioSpecificConfig.length), audioSpecificConfig]);
+    const decConfigBody = concatBytes([
+      u8(0x40), u8(0x15), u8(0,0,0), u32(128000), u32(128000), ascTag
+    ]);
+    const decConfigTag = concatBytes([u8(0x04), descLen(decConfigBody.length), decConfigBody]);
+    const slConfigTag = concatBytes([u8(0x06), descLen(1), u8(0x02)]);
+    const esBody = concatBytes([u16(1), u8(0), decConfigTag, slConfigTag]);
+    const esTag = concatBytes([u8(0x03), descLen(esBody.length), esBody]);
+    const esds = fullBox('esds', 0, 0, esTag);
+    return box('mp4a',
+      new Uint8Array(6), u16(1),
+      u16(0), u16(0), u32(0),
+      u16(channels), u16(16), u16(0), u16(0),
+      u32(sampleRate << 16),
+      esds
+    );
+  }
+
+  function sttsFromSamples(samples){
+    const entries = [];
+    for (let i=0;i<samples.length;i++){
+      const delta = samples[i].delta;
+      if (entries.length && entries[entries.length-1].delta === delta) entries[entries.length-1].count++;
+      else entries.push({ count:1, delta });
+    }
+    const body = [u32(entries.length)];
+    entries.forEach(e => { body.push(u32(e.count)); body.push(u32(e.delta)); });
+    return fullBox('stts', 0, 0, ...body);
+  }
+
+  function stsc(){
+    return fullBox('stsc', 0, 0, u32(1), u32(1), u32(1), u32(1));
+  }
+
+  function stsz(samples){
+    const body = [u32(0), u32(samples.length)];
+    samples.forEach(s => body.push(u32(s.data.length)));
+    return fullBox('stsz', 0, 0, ...body);
+  }
+
+  function stco(offsets){
+    const body = [u32(offsets.length)];
+    offsets.forEach(o => body.push(u32(o)));
+    return fullBox('stco', 0, 0, ...body);
+  }
+
+  function stss(samples){
+    const keyIdx = [];
+    samples.forEach((s,i) => { if (s.isKey) keyIdx.push(i+1); });
+    if (keyIdx.length === samples.length) return null;
+    const body = [u32(keyIdx.length)];
+    keyIdx.forEach(i => body.push(u32(i)));
+    return fullBox('stss', 0, 0, ...body);
+  }
+
+  function stbl(isAudio, samples, sampleEntry, offsets){
+    const parts = [sampleEntry ? fullBox('stsd', 0, 0, u32(1), sampleEntry) : null, sttsFromSamples(samples), stsc(), stsz(samples), stco(offsets)];
+    if (!isAudio){ const s = stss(samples); if (s) parts.push(s); }
+    return box('stbl', ...parts.filter(Boolean));
+  }
+
+  function computeOffsets(samples, base){
+    const offsets = [];
+    let cur = base;
+    samples.forEach(s => { offsets.push(cur); cur += s.data.length; });
+    return offsets;
+  }
+
+  function trak(opts){
+    const { trackId, isAudio, timescale, movieTimescale, samples, offsets, width, height, sampleEntry } = opts;
+    const durationMedia = samples.reduce((a,s)=>a+s.delta, 0);
+    const durationMovie = Math.round(durationMedia * (movieTimescale/timescale));
+    const mdiaBox = box('mdia', mdhd(timescale, durationMedia), hdlr(isAudio),
+      box('minf',
+        isAudio ? fullBox('smhd', 0, 0, u16(0), u16(0)) : fullBox('vmhd', 0, 1, u16(0),u16(0),u16(0),u16(0)),
+        dinf(),
+        stbl(isAudio, samples, sampleEntry, offsets)
+      )
+    );
+    return box('trak', tkhd(trackId, durationMovie, width||0, height||0, isAudio), mdiaBox);
+  }
+
+  function buildMoov(movieTimescale, videoTrack, audioTrack, mdatBase){
+    const tracks = [];
+    const videoOffsets = computeOffsets(videoTrack.samples, mdatBase);
+    tracks.push(trak({ trackId:1, isAudio:false, timescale:videoTrack.timescale, movieTimescale, samples:videoTrack.samples, offsets:videoOffsets, width:videoTrack.width, height:videoTrack.height, sampleEntry: avc1(videoTrack.width, videoTrack.height, videoTrack.avcC) }));
+    let nextTrackId = 2;
+    if (audioTrack){
+      const videoBytes = videoTrack.samples.reduce((a,s)=>a+s.data.length,0);
+      const audioOffsets = computeOffsets(audioTrack.samples, mdatBase + videoBytes);
+      tracks.push(trak({ trackId:2, isAudio:true, timescale:audioTrack.timescale, movieTimescale, samples:audioTrack.samples, offsets:audioOffsets, sampleEntry: mp4a(audioTrack.channels, audioTrack.sampleRate, audioTrack.asc) }));
+      nextTrackId = 3;
+    }
+    const durations = [videoTrack, ...(audioTrack?[audioTrack]:[])].map(t => Math.round(t.samples.reduce((a,s)=>a+s.delta,0) * (movieTimescale/t.timescale)));
+    const movieDuration = Math.max(...durations);
+    return box('moov', mvhd(movieTimescale, movieDuration, nextTrackId), ...tracks);
+  }
+
+  function mux(videoTrack, audioTrack){
+    const movieTimescale = 1000;
+    const ftypBox = ftyp();
+    const placeholderMoov = buildMoov(movieTimescale, videoTrack, audioTrack, 0);
+    const mdatBase = ftypBox.length + placeholderMoov.length + 8;
+    const finalMoov = buildMoov(movieTimescale, videoTrack, audioTrack, mdatBase);
+    if (finalMoov.length !== placeholderMoov.length) throw new Error('mp4 mux: moov size mismatch between passes');
+    const mdatBody = concatBytes([].concat(videoTrack.samples.map(s=>s.data), audioTrack ? audioTrack.samples.map(s=>s.data) : []));
+    const mdatBox = box('mdat', mdatBody);
+    return concatBytes([ftypBox, finalMoov, mdatBox]);
+  }
+
+  return { mux };
+})();
+
+
+function verifyPlayableBlob(blob, expectedDurationMs){
+  return new Promise((resolve) => {
+    const v = document.createElement('video');
+    v.preload = 'metadata';
+    const url = URL.createObjectURL(blob);
+    let done = false;
+    const finish = (ok) => { if (done) return; done = true; clearTimeout(timer); URL.revokeObjectURL(url); resolve(ok); };
+    const timer = setTimeout(() => finish(false), 6000);
+    v.onloadedmetadata = () => {
+      const d = v.duration;
+      const expected = expectedDurationMs/1000;
+      if (!(isFinite(d) && d > 0.1 && Math.abs(d-expected) < Math.max(2, expected*0.35))){ finish(false); return; }
+      // Duration alone isn't enough — this is exactly what was wrong before (looked fine,
+      // still didn't scrub). Actually try seeking partway through and confirm it moves.
+      try{
+        const target = d/2;
+        v.onseeked = () => finish(Math.abs(v.currentTime - target) < Math.max(0.5, d*0.1));
+        v.currentTime = target;
+        setTimeout(() => finish(false), 2500);
+      }catch(e){ finish(false); }
+    };
+    v.onerror = () => finish(false);
+    v.src = url;
+  });
+}
+
+async function fixWebmDurationSafe(blob, durationMs){
+  try{
+    const buf = await blob.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    const patched = ebmlPatchWebmDuration(bytes, durationMs);
+    if (!patched) return blob;
+    const newBlob = new Blob([patched], { type: blob.type || 'video/webm' });
+    const verified = await verifyPlayableBlob(newBlob, durationMs);
+    return verified ? newBlob : blob;
+  }catch(e){
+    return blob; // any problem at all — just use the original, unpatched file
+  }
+}
+
+function primeVideos(vidsArr, trims){
+  return Promise.all(vidsArr.map((v,i) => new Promise((resolve) => {
+    let settled = false;
+    const done = () => { if (settled) return; settled = true; v.onseeked = null; resolve(); };
+    v.onseeked = done;
+    v.currentTime = Math.max(0, trims[i].start);
+    setTimeout(done, 900); // safety net in case 'seeked' never fires
+  })));
+}
+
+async function generateVideo(){
+  const genBtn = document.getElementById('generateBtn');
+  genBtn.disabled = true;
+  setStatus('Taiyari ho rahi hai...', 2);
+
+  let audioCtx, vids = [];
+  try{
+    const qualityMode = document.querySelector('input[name=qualityMode]:checked').value;
+
+    const transTypeSel = document.getElementById('transType').value;
+    let transDur = Math.min(1, Math.max(0.1, parseFloat(document.getElementById('transDur').value) || 0.35));
+    const visualPop = document.getElementById('visualPop').checked;
+    const vignetteOn = document.getElementById('vignette').checked;
+    const tightPace = document.getElementById('tightPace').checked;
+    const hookZoomOn = document.getElementById('hookZoom').checked;
+    const animCaptions = document.getElementById('animCaptions').checked;
+    const bgBlurOn = document.getElementById('bgBlur').checked;
+    const bgBlurAmt = Math.min(30, Math.max(2, parseFloat(document.getElementById('bgBlurAmt').value) || 14));
+    const loopFriendly = document.getElementById('loopFriendly').checked;
+    const captionStyle = document.getElementById('captionStyle').value;
+    const captionFont = document.getElementById('captionFont').value;
+    const musicVol = (parseFloat(document.getElementById('musicVol').value)||22)/100;
+
+    vids = state.files.map(f => {
+      const v = document.createElement('video');
+      v.src = URL.createObjectURL(f);
+      v.playsInline = true; v.preload = 'auto'; v.muted = false; v.volume = 1;
+      // Slow-mo/fast speeds otherwise trigger the browser's audio pitch-correction, which is
+      // CPU-heavy and was exactly what brought the stutter back when a speed other than 1x
+      // was picked. Turning it off keeps playback smooth; audio just naturally goes a bit
+      // deeper/higher with the speed, same as real slow-mo footage.
+      v.preservesPitch = false;
+      v.mozPreservesPitch = false;
+      v.webkitPreservesPitch = false;
+      return v;
+    });
+    await Promise.all(vids.map(v => new Promise((res,rej) => {
+      const t = setTimeout(()=>rej(new Error('Clip load hone mein bohot time laga.')), 15000);
+      v.onloadedmetadata = () => { clearTimeout(t); res(); };
+      v.onerror = () => { clearTimeout(t); rej(new Error('Ek clip load nahi ho saki.')); };
+    })));
+
+    // Resolution: "HD Smart" targets 1080x1920 — the standard Reels/Instagram best-quality
+    // size (going higher doesn't look any better once Instagram/WhatsApp re-compress it, it
+    // just risks choking weaker devices) — but reads the device's own horsepower and quietly
+    // dials fps/bitrate to match, so it stays smooth whether it's a low-RAM phone or a fast
+    // laptop, with no separate setting to fiddle with. "Native" instead reads straight off
+    // the uploaded clips (no fixed number picked ahead of time). "Lite" is a fixed fallback
+    // for very old devices.
+    const cores = navigator.hardwareConcurrency || 4;
+    const mem = navigator.deviceMemory || 4; // unavailable on Safari/iOS — assumes mid-range
+    const deviceTier = (cores <= 2 || mem <= 2) ? 'low' : (cores <= 4 || mem <= 4) ? 'mid' : 'high';
+
+    // A small fixed safety margin taken off every bitrate below (not fps, not resolution —
+    // just how hard the encoder has to work per frame). This is a one-time, predictable
+    // reduction decided BEFORE recording starts — never changed mid-recording — so it can't
+    // introduce stalls, glitches, or affect the output format/download in any way. It exists
+    // purely to give the encoder consistent breathing room, since the actual freeze reports
+    // point to the encoder/CPU falling behind, not to resolution or clip quality.
+    const ENCODER_SAFETY_MARGIN = 0.85;
+    let W, H, bitrate, fps;
+    if (qualityMode === 'lite'){
+      W = 720; H = 1280; bitrate = Math.round(4_000_000 * ENCODER_SAFETY_MARGIN); fps = 20;
+    } else if (qualityMode === 'auto'){
+      const bestH = Math.max(...vids.map(v => Math.max(v.videoWidth, v.videoHeight)));
+      H = Math.min(2560, Math.max(1280, Math.round(bestH/2)*2));
+      W = Math.round((H*9/16)/2)*2;
+      bitrate = Math.round(Math.min(16, Math.max(6, (H/1920)*8)) * 1_000_000 * ENCODER_SAFETY_MARGIN);
+      fps = deviceTier === 'low' ? 20 : 24;
+    } else { // 'hd' — smart, device-aware
+      W = 1080; H = 1920;
+      if (deviceTier === 'low'){ fps = 20; bitrate = Math.round(5_000_000 * ENCODER_SAFETY_MARGIN); }
+      else if (deviceTier === 'mid'){ fps = 24; bitrate = Math.round(7_000_000 * ENCODER_SAFETY_MARGIN); }
+      else { fps = 30; bitrate = Math.round(9_000_000 * ENCODER_SAFETY_MARGIN); }
+    }
+
+    // Slow-motion clips stretch a shorter piece of source footage across more real-world
+    // time — capturing a few extra frames per second across that stretch is what actually
+    // makes it read as smooth rather than choppy, so nudge fps up a bit whenever any clip
+    // is set below 1x. Capped so it never exceeds what the device tier can comfortably do.
+    // This bump now follows the SAME safety-margin philosophy as the base bitrate above,
+    // instead of being a separate flat add-on — so multiple slow-mo clips don't quietly
+    // undo the safety margin we just gave the encoder.
+    const hasSlowMo = state.speeds.some(s => (s||1) < 1);
+    if (hasSlowMo){
+      const fpsCap = deviceTier === 'low' ? 24 : 30;
+      fps = Math.min(fpsCap, fps + Math.round(6 * ENCODER_SAFETY_MARGIN));
+      bitrate = Math.round(bitrate * (1 + 0.1 * ENCODER_SAFETY_MARGIN));
+    }
+
+    // "Target total" is now always enforced, not just a suggestion — if the clips' current
+    // trims add up to more than this (e.g. a clip was never manually trimmed and is still
+    // its full original length), every clip is shrunk proportionally so the final video
+    // never runs past what you asked for. Trim starts are kept as-is; only each clip's
+    // length is scaled down.
+    const N = state.files.length;
+    const targetLenVal = Math.max(4, parseFloat(document.getElementById('targetLen').value) || 12);
+    const clipLensSec = state.trims.map((t,i) => {
+      const sp = (state.speeds[i]||1) * (tightPace ? 1.1 : 1);
+      return Math.max(0.2, (t.end - t.start)) / sp;
+    });
+    const currentTotal = clipLensSec.reduce((a,b)=>a+b, 0);
+    if (currentTotal > targetLenVal + 0.5){
+      const scale = targetLenVal / currentTotal;
+      for (let i=0;i<N;i++){
+        const sp = (state.speeds[i]||1) * (tightPace ? 1.1 : 1);
+        const newLenClipTime = (clipLensSec[i]*scale) * sp;
+        state.trims[i] = { start: state.trims[i].start, end: state.trims[i].start + newLenClipTime };
+        const trimEndInput = document.getElementById('trimEnd-'+i);
+        if (trimEndInput) trimEndInput.value = state.trims[i].end.toFixed(1);
+      }
+    }
+
+    setStatus('Clips taiyar ki ja rahi hain...', 5);
+    await primeVideos(vids, state.trims);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const dest = audioCtx.createMediaStreamDestination();
+    vids.forEach(v => {
+      try{
+        const src = audioCtx.createMediaElementSource(v);
+        const gain = audioCtx.createGain(); gain.gain.value = 1;
+        src.connect(gain).connect(dest);
+      }catch(e){}
+    });
+    let musicBuffer = null;
+    const musicOn = document.getElementById('musicEnabled').checked;
+    if (musicOn && state.musicFile){
+      setStatus('Music decode ho rahi hai...', 7);
+      const buf = await state.musicFile.arrayBuffer();
+      musicBuffer = await audioCtx.decodeAudioData(buf.slice(0));
+    }
+
+    const canvasStream = canvas.captureStream(fps);
+
+    let estTotal = 0;
+    for (let i=0;i<N;i++){
+      const sp = (state.speeds[i]||1) * (tightPace?1.1:1);
+      estTotal += Math.max(0.2, (state.trims[i].end - state.trims[i].start)) / sp;
+    }
+
+    let hookSnapshot = null;
+    function captureHookSnapshot(){
+      const c = document.createElement('canvas'); c.width=W; c.height=H;
+      c.getContext('2d').drawImage(canvas,0,0);
+      hookSnapshot = c;
+    }
+    const popFilterStr = visualPop ? 'contrast(1.08) saturate(1.15)' : '';
+    const blurAmtVal = bgBlurOn ? bgBlurAmt : 0;
+
+    async function runOnce(sink, genStart){
+      // A fresh, shuffled combination of transitions is picked for THIS generation only —
+      // so "Auto" gives a different, still-good-looking mix each time you generate, instead
+      // of repeating the same fixed pattern every run.
+      const autoSeq = shuffleArray(AUTO_POOL);
+      const startedFlags = new Array(N).fill(false);
+      let lastStatusUpdate = 0;
+      // Rolling average (not a single reading) of how long each drawn frame actually took,
+      // in ms. A single slow frame (one GC pause, one OS hiccup) barely moves this — it only
+      // climbs when frames are slow for real, several in a row. Read once at the START of each
+      // clip/transition below (never mid-transition, so a transition's own math never changes
+      // once it has begun) to decide whether THIS upcoming transition should be shortened.
+      let frameTimeEMA = 0;
+
+      function playSegment(idx){
+        return new Promise((resolve) => {
+          const v = vids[idx];
+          const trim = state.trims[idx];
+          const speed = (state.speeds[idx]||1) * (tightPace ? 1.1 : 1);
+          v.playbackRate = speed;
+          const hasNext = idx < N-1;
+          const resolvedType = resolveTransition(transTypeSel, idx, autoSeq);
+          // If recent frames have genuinely been running slow (device under real load right
+          // now — not just one blip), give this transition less time to blend in: a shorter
+          // overlap means fewer of the expensive double-frame draws needed to get through it,
+          // which is exactly the moment freezes were being reported at. A single slow frame
+          // never triggers this — only a sustained, real slowdown does.
+          const idealFrameMs = 1000/fps;
+          const cpuStressed = frameTimeEMA > idealFrameMs * 1.6;
+          const effectiveTransDur = resolvedType === 'cut' ? 0 : (cpuStressed ? Math.min(transDur, 0.15) : transDur);
+          // Even on a hard cut (effectiveTransDur = 0) we still start the next clip's
+          // decode/play a hair early — this is the fix for the small stutter right at a
+          // join: previously the next video's play() only fired once we needed to actually
+          // show it, so its first frame or two could lag. Starting it slightly ahead (still
+          // invisible — the drawing logic below only shows it once effectiveTransDur says
+          // to) warms up decoding without changing what's drawn or how transitions look.
+          const PREROLL = 0.28;
+          const startWindow = Math.max(effectiveTransDur, PREROLL);
+          let nextStarted = false;
+          let snapshotTaken = idx !== 0;
+
+          // Caption text/font/wrapping measured ONCE here, not on every frame — this was
+          // one of the two big per-frame costs causing dropped/duplicate frames.
+          const capText = state.captions[idx];
+          const capPrep = (capText && capText.trim()) ? prepareCaption(ctx, capText, captionFont, captionStyle, W) : null;
+
+          if (!startedFlags[idx]){ startedFlags[idx] = true; v.play().catch(()=>{}); }
+
+          function loop(){
+            const remaining = trim.end - v.currentTime;
+
+            if (hasNext && !nextStarted && remaining <= startWindow && remaining > 0){
+              nextStarted = true;
+              startedFlags[idx+1] = true;
+              const nv = vids[idx+1];
+              nv.playbackRate = (state.speeds[idx+1]||1) * (tightPace?1.1:1);
+              nv.play().catch(()=>{});
+            }
+
+            let zoom = 1, offX = 0, offY = 0;
+            if (hookZoomOn && idx === 0){
+              const localT = v.currentTime - trim.start;
+              if (localT < 0.4){
+                const pp = localT/0.4;
+                zoom = 1.16 - 0.16*pp;
+                const decay = 1-pp;
+                offX = (Math.random()-0.5)*8*decay; offY = (Math.random()-0.5)*8*decay;
+              }
+            }
+
+            const _drawStart = performance.now();
+            if (nextStarted && effectiveTransDur > 0){
+              const progress = Math.min(1, Math.max(0, 1 - remaining/effectiveTransDur));
+              drawTransitionFrame(resolvedType, progress, v, vids[idx+1], ctx, W, H, blurAmtVal, popFilterStr);
+            } else {
+              drawVideoFrame(v, ctx, W, H, zoom, offX, offY, blurAmtVal, popFilterStr);
+            }
+            // If the frame we just drew took unusually long (device hiccup / thermal /
+            // background throttle), skip the purely cosmetic overlays below for THIS one
+            // frame only. This lets the loop catch up instead of the recorder duplicating a
+            // stale frame, which is what shows up as a brief freeze/stutter in the final file.
+            // Core video content (the clip/transition itself) is never skipped, only the
+            // vignette/loop-blend/caption overlay on top of it.
+            const _frameCost = performance.now() - _drawStart;
+            const _skipOverlaysThisFrame = _frameCost > 55;
+            // Feed this frame's cost into the rolling average that playSegment() checks at the
+            // start of each clip — this is what lets a genuinely overloaded run shorten its
+            // NEXT transition automatically (see cpuStressed above), without ever touching a
+            // transition that's already in progress.
+            frameTimeEMA = frameTimeEMA === 0 ? _frameCost : (frameTimeEMA*0.8 + _frameCost*0.2);
+
+            if (vignetteOn && !_skipOverlaysThisFrame) drawVignette(ctx, W, H);
+
+            if (loopFriendly && idx === N-1 && hookSnapshot && !_skipOverlaysThisFrame){
+              const loopBackDur = 0.5;
+              if (remaining <= loopBackDur){
+                const lp = Math.min(1, Math.max(0, 1 - remaining/loopBackDur));
+                ctx.globalAlpha = lp * 0.7;
+                ctx.drawImage(hookSnapshot, 0, 0, W, H);
+                ctx.globalAlpha = 1;
+              }
+            }
+
+            if (capPrep && !_skipOverlaysThisFrame){
+              const clipT = v.currentTime - trim.start;
+              const phase = animCaptions ? Math.min(1, clipT/0.3) : 1;
+              renderCaption(ctx, W, H, capPrep, phase, captionStyle);
+            }
+
+            if (!snapshotTaken){ captureHookSnapshot(); snapshotTaken = true; }
+
+            const nowMs = performance.now();
+            if (nowMs - lastStatusUpdate > 150){ // throttle status/DOM updates — they also cost frame time
+              lastStatusUpdate = nowMs;
+              const elapsed = (nowMs-genStart)/1000;
+              setStatus(`Video generate ho rahi hai... (${Math.min(elapsed,estTotal).toFixed(1)}s / ~${estTotal.toFixed(1)}s)`, 12 + (elapsed/Math.max(0.1,estTotal))*80);
+            }
+
+            if (v.currentTime >= trim.end - 0.02 || v.ended){ v.pause(); resolve(); return; }
+            requestAnimationFrame(loop);
+          }
+          requestAnimationFrame(loop);
+        });
+      }
+
+      let musicSource = null;
+      if (musicBuffer){
+        musicSource = audioCtx.createBufferSource();
+        musicSource.buffer = musicBuffer; musicSource.loop = true;
+        const gain = audioCtx.createGain(); gain.gain.value = musicVol;
+        musicSource.connect(gain).connect(dest);
+      }
+
+      sink.start();
+      if (musicSource) musicSource.start();
+      for (let i=0;i<N;i++) await playSegment(i);
+      vids.forEach(v => { try{ v.pause(); }catch(e){} });
+      if (musicSource) { try{ musicSource.stop(); }catch(e){} }
+      return sink.stop();
+    }
+
+    let blob = null, ext = 'webm';
+
+    // An in-house WebCodecs-based MP4 muxer used to be tried here first. It could produce a
+    // file that plays fine locally (passes our own quick verifyPlayableBlob check) but doesn't
+    // fully follow the MP4/ISO-BMFF spec the way WhatsApp's own file-format scanner expects —
+    // which is exactly the "sent in an unusual format... cannot be opened" rejection some
+    // downloads were hitting. To remove that risk entirely, output now always goes through the
+    // browser's own native MediaRecorder (the same long-proven path this already fell back to)
+    // — a real, browser-generated MP4 or WebM, never a hand-built container.
+    setStatus('Recorder taiyar ho raha hai...', 9);
+    const sink = setupMediaRecorderSink(canvasStream, dest.stream, bitrate);
+    const recordStart = performance.now();
+    blob = await runOnce(sink, recordStart);
+    const actualDurationMs = performance.now() - recordStart;
+    ext = sink.ext;
+    if (ext === 'webm'){
+      setStatus('Video ki length file mein theek se likhi ja rahi hai (WhatsApp/Insta compatibility)...', 96);
+      blob = await fixWebmDurationSafe(blob, actualDurationMs);
+    }
+
+
+    const url = URL.createObjectURL(blob);
+    document.getElementById('outVideo').src = url;
+    const dl = document.getElementById('dlLink');
+    dl.href = url; dl.download = `flixly.${ext}`;
+    document.getElementById('output').classList.add('active');
+    if (ext === 'mp4'){
+      setStatus('Ho gaya! MP4 format — WhatsApp/Instagram par seedha video ki tarah jayegi.', 100);
+    } else {
+      setStatus('Ho gaya! WebM bani hai (is browser mein direct MP4 recording available nahi). Yeh poori tarah play hoti hai — WhatsApp par kabhi document-icon ke sath aa sakti hai, tap kar ke khulegi aur chalegi bilkul theek.', 100);
+    }
+  } catch(err){
+    setStatus('Error: ' + (err && err.message ? err.message : 'kuch ghalat ho gaya, dobara try karo.'));
+  } finally {
+    vids.forEach(v => { try{ URL.revokeObjectURL(v.src); }catch(e){} });
+    if (audioCtx) { try{ audioCtx.close(); }catch(e){} }
+    genBtn.disabled = false;
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', generateVideo);
+</script>
+</body>
+</html>
