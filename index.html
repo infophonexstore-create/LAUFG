@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flixly</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flixly">
 <style>
   :root{
     --bg:#0a0e1a;
@@ -2081,6 +2088,15 @@ async function generateVideo(){
 }
 
 document.getElementById('generateBtn').addEventListener('click', generateVideo);
+
+// Registers the service worker so the app can be "installed" (Add to Home Screen / the
+// browser's Install button) and opens offline afterwards. If this file isn't served over
+// https (or from localhost), the browser silently ignores this — it never breaks the page.
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
 </script>
 </body>
 </html>
